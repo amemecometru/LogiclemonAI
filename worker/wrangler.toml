@@ -1,0 +1,14 @@
+name = "webhooks-email"
+main = "index.js"
+compatibility_date = "2026-01-01"
+
+[placement]
+mode = "smart"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "webhooks-email"
+database_id = ""
+
+[env.production]
+vars = { ENVIRONMENT = "production" }
