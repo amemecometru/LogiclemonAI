@@ -28,7 +28,7 @@ OPENROUTER_BASE = "https://openrouter.ai/api/v1"
 MODEL = "google/gemma-4-26b-a4b-it:free"
 
 DESKTOP_FORWARD_URL = os.getenv("DESKTOP_FORWARD_URL", "http://127.0.0.1:3000")
-DESKTOP_FORWARD_KEY = os.getenv("DESKTOP_FORWARD_KEY", "wek_desktop_sync_key_change_me")
+DESKTOP_FORWARD_KEY = os.getenv("DESKTOP_FORWARD_KEY", "")  # no insecure default; must match receiver key
 INGRESS_API_KEYS = set()
 
 class IngressPayload(BaseModel):

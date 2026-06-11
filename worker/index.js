@@ -2,7 +2,7 @@ const CONFIG = {
   OPENROUTER_API_KEY: typeof OPENROUTER_API_KEY !== 'undefined' ? OPENROUTER_API_KEY : '',
   OPENROUTER_BASE: 'https://openrouter.ai/api/v1',
   MODEL: 'google/gemma-4-26b-a4b-it:free',
-  DESKTOP_FORWARD_KEY: 'wek_desktop_sync_key_change_me',
+
   ALLOWED_ORIGINS: ['https://webhooks.email', 'https://*.webhooks.email', 'http://127.0.0.1:5500', 'http://127.0.0.1:8000', 'http://127.0.0.1:8080'],
 };
 
@@ -56,8 +56,14 @@ function buildHtml(parsed) {
 </html>`;
 }
 
-async function proxyOpenRouter(request, cors) {
+async function proxyOpenRouter(request, cors, env) {
   try {
+    const provided = request.headers.get('x-proxy-key') || '';
+    if (!env || !env.PROXY_SECRET || provided !== env.PROXY_SECRET) {
+      return new Response(JSON.stringify({ error: 'Unauthorized: missing or invalid x-proxy-key' }), {
+        status: 401, headers: { 'Content-Type': 'application/json', ...cors },
+      });
+    }
     const body = await request.json();
     const { prompt } = body;
     if (!prompt) {
@@ -68,7 +74,7 @@ async function proxyOpenRouter(request, cors) {
     const resp = await fetch(CONFIG.OPENROUTER_BASE + '/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer ' + CONFIG.OPENROUTER_API_KEY,
+        'Authorization': 'Bearer ' + (env.OPENROUTER_API_KEY || CONFIG.OPENROUTER_API_KEY),
         'Content-Type': 'application/json',
         'HTTP-Referer': 'https://webhooks.email',
         'X-Title': 'webhooks.email',
@@ -227,7 +233,7 @@ export default {
 
     switch (url.pathname) {
       case '/api/generate':
-        if (request.method === 'POST') return proxyOpenRouter(request, cors);
+        if (request.method === 'POST') return proxyOpenRouter(request, cors, env);
         break;
       case '/api/webhook':
         if (request.method === 'POST') return handleWebhook(request, cors, env);

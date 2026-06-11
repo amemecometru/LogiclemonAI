@@ -1,9 +1,16 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const PORT = 3000;
-const API_KEY = process.env.RECEIVER_API_KEY || "wek_desktop_sync_key_change_me";
+let API_KEY = process.env.RECEIVER_API_KEY;
+if (!API_KEY) {
+  API_KEY = 'wek_' + crypto.randomBytes(18).toString('hex');
+  console.warn('[webhooks.email] No RECEIVER_API_KEY set -- generated a temporary key for this session:');
+  console.warn('[webhooks.email]   ' + API_KEY);
+  console.warn('[webhooks.email] In the PWA console run: WebhooksEmail.setDesktopKey("' + API_KEY + '")');
+}
 
 const server = http.createServer((req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');

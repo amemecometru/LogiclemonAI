@@ -212,6 +212,7 @@ Suggest practical webhook endpoints that integrate with the Cloudflare Worker an
   let lastResult = null;
   let lastPrompt = '';
   let desktopURL = '';
+  let desktopKey = '';
   let repairCount = 0;
   const MAX_REPAIRS = 3;
   const STORAGE_KEY = 'webhooks_email_api_key';
@@ -228,6 +229,7 @@ Suggest practical webhook endpoints that integrate with the Cloudflare Worker an
   function saveApiKey(key) {
     CONFIG.apiKey = key;
     localStorage.setItem(STORAGE_KEY, key);
+    setFreeRemaining(0);
     if (key.startsWith('wek_')) {
       CONFIG.isProxyMode = true;
       CONFIG.proxyEndpoint = localStorage.getItem('webhooks_email_proxy') || '';
@@ -332,6 +334,7 @@ Suggest practical webhook endpoints that integrate with the Cloudflare Worker an
   function showKeyModal() {
     const modal = document.getElementById('keyModal');
     if (modal) modal.classList.remove('hidden');
+    prefillSettings();
   }
 
   function hideKeyModal() {
@@ -348,7 +351,12 @@ Suggest practical webhook endpoints that integrate with the Cloudflare Worker an
   }
 
   function setWorkerURL(url) {
-    CONFIG.workerURL = url.replace(/\/+$/, '');
+    CONFIG.workerURL = (url || '').replace(/\/+$/, '');
+    if (CONFIG.workerURL) {
+      localStorage.setItem('webhooks_email_worker', CONFIG.workerURL);
+    } else {
+      localStorage.removeItem('webhooks_email_worker');
+    }
     connectStream();
   }
 
@@ -362,10 +370,29 @@ Suggest practical webhook endpoints that integrate with the Cloudflare Worker an
   }
 
   function setDesktopIP(ip) {
+    localStorage.setItem('webhooks_email_desktop_ip', ip);
     desktopURL = ip.startsWith('http') ? ip : 'http://' + ip;
     desktopURL = desktopURL.replace(/\/+$/, '') + ':3000';
     const btn = document.getElementById('sendDesktopBtn');
     if (btn) btn.style.display = desktopURL ? 'inline-flex' : 'none';
+  }
+
+  function setDesktopKey(key) {
+    desktopKey = key || '';
+    if (desktopKey) {
+      localStorage.setItem('webhooks_email_desktop_key', desktopKey);
+    } else {
+      localStorage.removeItem('webhooks_email_desktop_key');
+    }
+  }
+
+  function getOrCreateSessionId() {
+    let id = localStorage.getItem('webhooks_session');
+    if (!id) {
+      id = 'sess_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+      localStorage.setItem('webhooks_session', id);
+    }
+    return id;
   }
 
   function addMessage(text, role) {
@@ -452,9 +479,79 @@ window.addEventListener('unhandledrejection', function(e) {
     }
   }
 
+  // ---------- Zero-key free trial + in-UI settings ----------
+  const FREE_KEY = 'webhooks_email_free_remaining';
+  const DEFAULT_FREE_USES = 3;
+  function getFreeRemaining() {
+    const v = parseInt(localStorage.getItem(FREE_KEY), 10);
+    return Number.isFinite(v) ? Math.max(0, v) : DEFAULT_FREE_USES;
+  }
+  function setFreeRemaining(n) {
+    localStorage.setItem(FREE_KEY, String(Math.max(0, n)));
+    refreshFreeStatus();
+  }
+  function isFreeMode() {
+    return !CONFIG.apiKey && getFreeRemaining() > 0;
+  }
+  function refreshFreeStatus() {
+    const hint = document.getElementById('freeCountHint');
+    if (hint) hint.textContent = '(' + getFreeRemaining() + ' free left)';
+    if (!CONFIG.apiKey) {
+      const text = document.getElementById('statusText');
+      const dot = document.getElementById('statusDot');
+      const left = getFreeRemaining();
+      if (text) text.textContent = left > 0 ? ('Free: ' + left + ' left') : 'Add a key';
+      if (dot) dot.style.background = left > 0 ? '#fbbf24' : 'var(--error)';
+    }
+  }
+  async function callFree(userPrompt, signal) {
+    const base = (CONFIG.proxyEndpoint || '').replace(/\/+$/, '');
+    const res = await fetch(base + '/api/free-generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: userPrompt }),
+      signal: signal,
+    });
+    if (res.status === 429) throw new Error('Free generations used up. Add a free OpenRouter key in Settings for unlimited use.');
+    if (!res.ok) throw new Error('Free generate failed (' + res.status + ').');
+    const data = await res.json();
+    setFreeRemaining(getFreeRemaining() - 1);
+    return data;
+  }
+  function saveConnectionsFromModal() {
+    const val = id => ((document.getElementById(id) || {}).value || '').trim();
+    const be = val('backendUrlInput');
+    const w = val('workerUrlInput');
+    const ip = val('desktopIpInput');
+    const dk = val('desktopKeyInput');
+    if (be) setProxyEndpoint(be);
+    if (w) setWorkerURL(w);
+    if (ip) setDesktopIP(ip);
+    if (dk) setDesktopKey(dk);
+    const fb = document.getElementById('connFeedback');
+    if (fb) { fb.className = 'key-success'; fb.textContent = 'Saved on this device.'; }
+  }
+  function prefillSettings() {
+    const map = {
+      backendUrlInput: 'webhooks_email_proxy',
+      workerUrlInput: 'webhooks_email_worker',
+      desktopIpInput: 'webhooks_email_desktop_ip',
+      desktopKeyInput: 'webhooks_email_desktop_key',
+    };
+    for (const id in map) {
+      const el = document.getElementById(id);
+      if (el) el.value = localStorage.getItem(map[id]) || '';
+    }
+    refreshFreeStatus();
+  }
+
   async function callGemma(messages, { signal } = {}) {
     if (!CONFIG.apiKey) {
-      throw new Error('API key not set. Call WebhooksEmail.setApiKey() with your OpenRouter key.');
+      if (getFreeRemaining() > 0) {
+        const userMsg = messages.find(m => m.role === 'user');
+        return callFree(userMsg ? userMsg.content : '', signal);
+      }
+      throw new Error('No API key and no free generations left. Add a key in Settings.');
     }
 
     if (CONFIG.isProxyMode && CONFIG.proxyEndpoint) {
@@ -532,8 +629,8 @@ window.addEventListener('unhandledrejection', function(e) {
   }
 
   async function executeSkillChain(userPrompt, signal) {
-    if (CONFIG.isProxyMode) {
-      showStatus('Generating via webhooks.email...');
+    if (CONFIG.isProxyMode || isFreeMode()) {
+      showStatus(isFreeMode() ? 'Generating (free)...' : 'Generating via webhooks.email...');
       return callGemma([
         { role: 'user', content: userPrompt },
       ], { signal });
@@ -547,8 +644,9 @@ window.addEventListener('unhandledrejection', function(e) {
 
   async function sendPrompt(prompt) {
     if (!prompt.trim()) return;
-    if (!CONFIG.apiKey) {
-      addMessage('API key not set. Call WebhooksEmail.setApiKey() with your OpenRouter key.', 'error');
+    if (!CONFIG.apiKey && getFreeRemaining() <= 0) {
+      addMessage('You are out of free generations. Add a free OpenRouter key in Settings (the API button) for unlimited use.', 'error');
+      showKeyModal();
       return;
     }
 
@@ -569,6 +667,13 @@ window.addEventListener('unhandledrejection', function(e) {
       lastResult = data;
       addMessage('Rendered live!', 'assistant');
       renderPreview(data);
+      pushState(data, prompt);
+      if (!CONFIG.apiKey) {
+        const left = getFreeRemaining();
+        addMessage(left > 0
+          ? ('✨ Free generation used — ' + left + ' left. Add a key in Settings for unlimited + the full SkillChain.')
+          : '✨ That was your last free generation. Add a free OpenRouter key in Settings to keep going.', 'assistant');
+      }
       const sendBtn = document.getElementById('sendDesktopBtn');
       if (sendBtn) sendBtn.style.display = desktopURL ? 'inline-flex' : 'none';
     } catch (err) {
@@ -584,16 +689,48 @@ window.addEventListener('unhandledrejection', function(e) {
     }
   }
 
+  const CLIENT_ID = 'c_' + Math.random().toString(36).slice(2, 10);
+
+  async function pushState(parsed, prompt) {
+    if (!CONFIG.workerURL || !parsed) return;
+    try {
+      await fetch(CONFIG.workerURL + '/api/state?session=' + getOrCreateSessionId(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ parsed: parsed, prompt: prompt || lastPrompt, origin: CLIENT_ID }),
+      });
+    } catch (err) {
+      console.warn('pushState failed (non-fatal):', err.message);
+    }
+  }
+
+  async function hydrateState() {
+    if (!CONFIG.workerURL) return;
+    try {
+      const res = await fetch(CONFIG.workerURL + '/api/state?session=' + getOrCreateSessionId());
+      if (!res.ok) return;
+      const state = await res.json();
+      if (state && state.parsed) {
+        lastResult = state.parsed;
+        lastPrompt = state.prompt || lastPrompt;
+        renderPreview(state.parsed);
+      }
+    } catch (err) {
+      console.warn('hydrateState failed (non-fatal):', err.message);
+    }
+  }
+
   let eventSource = null;
 
   function connectStream() {
     if (!CONFIG.workerURL) return;
     disconnectStream();
-    const sessionId = localStorage.getItem('webhooks_session') || 'default';
+    const sessionId = getOrCreateSessionId();
     eventSource = new EventSource(CONFIG.workerURL + '/api/stream?session=' + sessionId);
     eventSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+        if (data.origin && data.origin === CLIENT_ID) return;
         if (data.type === 'INBOUND_WEBHOOK_PROMPT') {
           addMessage('External webhook triggered: "' + data.prompt.slice(0, 80) + '"', 'assistant');
           sendPrompt(data.prompt);
@@ -607,6 +744,7 @@ window.addEventListener('unhandledrejection', function(e) {
         }
       } catch {}
     };
+    eventSource.onopen = () => { hydrateState(); };
     eventSource.onerror = () => {
       eventSource.close();
       eventSource = null;
@@ -661,6 +799,10 @@ window.addEventListener('unhandledrejection', function(e) {
       addMessage('Set the desktop IP first: WebhooksEmail.setDesktopIP("192.168.x.x")', 'error');
       return;
     }
+    if (!desktopKey) {
+      addMessage('Set your desktop key first: WebhooksEmail.setDesktopKey("<key printed by receiver.js>")', 'error');
+      return;
+    }
     const fullDoc = buildFullDoc(lastResult);
     const msg = addMessage('Sending to desktop…', 'typing');
     try {
@@ -668,7 +810,7 @@ window.addEventListener('unhandledrejection', function(e) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': 'wek_desktop_sync_key_change_me',
+          'x-api-key': desktopKey,
         },
         body: JSON.stringify({
           filename: 'webhooks-ui.html',
@@ -727,6 +869,7 @@ window.addEventListener('unhandledrejection', function(e) {
         removeTyping();
         lastResult = fixed;
         renderPreview(fixed);
+        pushState(fixed, lastPrompt);
         addMessage('Self-healed! Bug fixed (attempt ' + repairCount + '/' + MAX_REPAIRS + ').', 'assistant');
       } catch (err) {
         removeTyping();
@@ -774,6 +917,20 @@ window.addEventListener('unhandledrejection', function(e) {
     if (settingsBtn) {
       settingsBtn.addEventListener('click', showKeyModal);
     }
+
+    const configBtn = document.getElementById('configBtn');
+    if (configBtn) {
+      configBtn.addEventListener('click', showKeyModal);
+    }
+
+    const saveConnBtn = document.getElementById('saveConnBtn');
+    if (saveConnBtn) saveConnBtn.addEventListener('click', saveConnectionsFromModal);
+    const tryFreeBtn = document.getElementById('tryFreeBtn');
+    if (tryFreeBtn) tryFreeBtn.addEventListener('click', () => {
+      hideKeyModal();
+      addMessage('✨ Free mode — you have ' + getFreeRemaining() + ' free generations. Type a prompt to start.', 'assistant');
+      if (dom.promptInput) dom.promptInput.focus();
+    });
 
     const appApiBtn = document.getElementById('appApiBtn');
     if (appApiBtn) {
@@ -836,6 +993,14 @@ window.addEventListener('unhandledrejection', function(e) {
     if (loadApiKey()) {
       updateStatus('connected');
     }
+
+    const savedWorker = localStorage.getItem('webhooks_email_worker');
+    if (savedWorker) setWorkerURL(savedWorker);
+    const savedDesktopKey = localStorage.getItem('webhooks_email_desktop_key');
+    if (savedDesktopKey) desktopKey = savedDesktopKey;
+    const savedIp = localStorage.getItem('webhooks_email_desktop_ip');
+    if (savedIp) setDesktopIP(savedIp);
+    refreshFreeStatus();
   });
 
   window.WebhooksEmail = {
@@ -844,11 +1009,16 @@ window.addEventListener('unhandledrejection', function(e) {
     setProxyEndpoint,
     setWorkerURL,
     setDesktopIP,
+    setDesktopKey,
+    setFreeRemaining,
+    getFreeRemaining,
     setModel,
     getSelectedModel,
     sendPrompt,
     sendToDesktop,
     createWebhookEndpoint,
+    pushState,
+    hydrateState,
     connectStream,
     disconnectStream,
     validateApiKey,

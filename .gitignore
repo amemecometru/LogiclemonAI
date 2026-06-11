@@ -13,3 +13,9 @@ CriticalBug
 /design-package-one
 mercurial-tessellation.html
 optimize-gemini.txt
+opus4-8-*
+opus4-8-candid.md
+opus4-8-handoff.md
+opus4-8-handoff-webhooks.patch
+generic-files/
+opus-files/

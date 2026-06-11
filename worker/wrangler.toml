@@ -5,11 +5,14 @@ compatibility_date = "2026-01-01"
 [placement]
 mode = "smart"
 
-# KV for persisting VFS session state
-# Create: wrangler kv:namespace create "WEBHOOKS_KV"
-[[kv_namespaces]]
-binding = "WEBHOOKS_KV"
-id = ""
+# KV for persisting VFS session state (OPTIONAL -- the SSE hub works without it).
+# An empty id makes `wrangler deploy` FAIL, so this stays commented out until you
+# create the namespace and paste the real id:
+#   wrangler kv namespace create "WEBHOOKS_KV"
+# Then uncomment the three lines below and set id.
+# [[kv_namespaces]]
+# binding = "WEBHOOKS_KV"
+# id = "PASTE_REAL_KV_NAMESPACE_ID_HERE"
 
 # Durable Object for real-time SSE broadcast hub
 [[durable_objects.bindings]]
@@ -20,10 +23,9 @@ class_name = "SessionHub"
 tag = "v1"
 new_classes = ["SessionHub"]
 
-[[d1_databases]]
-binding = "DB"
-database_name = "webhooks-email"
-database_id = ""
+# NOTE: removed the [[d1_databases]] block -- the worker never references env.DB and
+# an empty database_id breaks `wrangler deploy`. Re-add it with a real database_id
+# only when you actually wire D1.
 
 [env.production]
 vars = { ENVIRONMENT = "production" }

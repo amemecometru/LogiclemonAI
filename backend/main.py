@@ -4,17 +4,20 @@ import uuid
 from datetime import datetime, timedelta
 
 import uvicorn
-from fastapi import FastAPI, HTTPException, Header, Depends
+from fastapi import FastAPI, HTTPException, Header, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import httpx
 
 app = FastAPI(title="webhooks.email API", version="1.0.0")
 
+_default_origins = "https://webhooks.email,https://www.webhooks.email,http://127.0.0.1:8080,http://127.0.0.1:5500"
+ALLOWED_ORIGINS = [o.strip() for o in os.getenv("BACKEND_ALLOWED_ORIGINS", _default_origins).split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -36,6 +39,15 @@ SUPPORTED_MODELS = {
 usage_log = []
 users_db = {}
 api_keys_db = {}
+
+FREE_DAILY_LIMIT = int(os.getenv("FREE_DAILY_LIMIT", "3"))
+_free_usage: dict = {}
+
+def _client_ip(request: Request) -> str:
+    xff = request.headers.get("x-forwarded-for")
+    if xff:
+        return xff.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
 
 class SignupRequest(BaseModel):
     email: str
@@ -86,7 +98,7 @@ async def signup(req: SignupRequest):
 async def verify_api_key(x_api_key: str = Header(None)):
     if x_api_key and x_api_key in api_keys_db:
         return api_keys_db[x_api_key]
-    return None
+    raise HTTPException(status_code=401, detail="Valid webhooks.email API key required (x-api-key).")
 
 @app.post("/api/validate-key", response_model=ValidateKeyResponse)
 async def validate_key(x_api_key: str = Header(None)):
@@ -118,9 +130,8 @@ async def list_models():
         "models": SUPPORTED_MODELS,
     }
 
-@app.post("/api/generate", response_model=ChatResponse)
-async def generate(req: ChatRequest, user_id: str | None = Depends(verify_api_key)):
-    model = req.model if req.model in SUPPORTED_MODELS else DEFAULT_MODEL
+async def _openrouter_generate(prompt: str, model: str) -> dict:
+    import re
     async with httpx.AsyncClient(timeout=60.0) as client:
         resp = await client.post(
             f"{OPENROUTER_BASE}/chat/completions",
@@ -134,29 +145,47 @@ async def generate(req: ChatRequest, user_id: str | None = Depends(verify_api_ke
                 "model": model,
                 "messages": [
                     {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user", "content": req.prompt},
+                    {"role": "user", "content": prompt},
                 ],
-                "extra_body": {"reasoning": {"enabled": True}},
             },
         )
-        if resp.status_code != 200:
-            raise HTTPException(status_code=502, detail=f"OpenRouter error: {resp.text}")
-        data = resp.json()
-        content = data["choices"][0]["message"]["content"]
-        try:
-            parsed = json.loads(content)
-        except json.JSONDecodeError:
-            match = __import__("re").search(r"\{[\s\S]*\}", content)
-            if match:
-                parsed = json.loads(match.group(0))
-            else:
-                raise HTTPException(status_code=502, detail="Model returned invalid JSON")
+    if resp.status_code != 200:
+        raise HTTPException(status_code=502, detail=f"OpenRouter error: {resp.text}")
+    content = resp.json()["choices"][0]["message"]["content"]
+    try:
+        return json.loads(content)
+    except json.JSONDecodeError:
+        match = re.search(r"\{[\s\S]*\}", content)
+        if match:
+            return json.loads(match.group(0))
+        raise HTTPException(status_code=502, detail="Model returned invalid JSON")
+
+
+@app.post("/api/generate", response_model=ChatResponse)
+async def generate(req: ChatRequest, user_id: str | None = Depends(verify_api_key)):
+    model = req.model if req.model in SUPPORTED_MODELS else DEFAULT_MODEL
+    parsed = await _openrouter_generate(req.prompt, model)
     usage_log.append({
         "user_id": user_id,
         "model": model,
         "timestamp": datetime.utcnow().isoformat(),
         "prompt_length": len(req.prompt),
     })
+    return ChatResponse(**parsed)
+
+
+@app.post("/api/free-generate", response_model=ChatResponse)
+async def free_generate(req: ChatRequest, request: Request):
+    ip = _client_ip(request)
+    today = datetime.utcnow().strftime("%Y-%m-%d")
+    rec = _free_usage.get(ip)
+    if not rec or rec.get("date") != today:
+        rec = {"date": today, "count": 0}
+    if rec["count"] >= FREE_DAILY_LIMIT:
+        raise HTTPException(status_code=429, detail="Free daily limit reached. Add your own OpenRouter key for unlimited use.")
+    parsed = await _openrouter_generate(req.prompt, DEFAULT_MODEL)
+    rec["count"] += 1
+    _free_usage[ip] = rec
     return ChatResponse(**parsed)
 
 @app.get("/api/health")
