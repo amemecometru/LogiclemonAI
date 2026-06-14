@@ -25,8 +25,16 @@
     promptInput: document.getElementById('promptInput'),
     sendBtn: document.getElementById('sendBtn'),
     preview: document.getElementById('preview'),
-    deviceBtns: document.querySelectorAll('.toolbar-btn[data-device]'),
     clearBtn: document.getElementById('clearPreviewBtn'),
+    devicePod: document.getElementById('devicePod'),
+    deviceTrigger: document.getElementById('deviceTrigger'),
+    deviceLabel: document.getElementById('deviceLabel'),
+    deviceItems: document.querySelectorAll('.pod-item[data-device]'),
+    previewCanvas: document.getElementById('previewCanvas'),
+    previewStage: document.getElementById('previewStage'),
+    zoomInBtn: document.getElementById('zoomInBtn'),
+    zoomOutBtn: document.getElementById('zoomOutBtn'),
+    zoomValue: document.getElementById('zoomValue'),
   };
 
   const SKILLS = {
@@ -524,6 +532,7 @@ window.addEventListener('unhandledrejection', function(e) {
     const blob = new Blob([docWithTelemetry], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     dom.preview.src = url;
+    if (typeof fitPreviewIfFit === 'function') fitPreviewIfFit();
     setTimeout(() => URL.revokeObjectURL(url), 10000);
   }
 
@@ -922,13 +931,77 @@ window.addEventListener('unhandledrejection', function(e) {
     dom.promptInput.style.height = Math.min(dom.promptInput.scrollHeight, 120) + 'px';
   });
 
-  dom.deviceBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      dom.deviceBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      dom.preview.classList.toggle('mobile', btn.dataset.device === 'mobile');
-    });
+  // --- Preview zoom (Slice 2) — always-visible compact control, pure CSS `zoom`, no deps ---
+  const ZOOM_MIN = 0.125, ZOOM_MAX = 2;
+  const ZOOM_STEPS = [0.125, 0.25, 0.333, 0.5, 0.666, 0.75, 1, 1.25, 1.5, 2];
+  const DEVICES = {
+    mobile:  { w: 390,  h: 800 },
+    tablet:  { w: 820,  h: 1180 },
+    laptop:  { w: 1280, h: 900 },
+    desktop: { w: 1440, h: 960 },
+  };
+  let currentDevice = 'laptop';
+  let zoomLevel = 1;
+  let zoomMode = 'fit'; // 'fit' (auto fit-to-width) | 'manual'
+
+  function currentDesignWidth() { return (DEVICES[currentDevice] || DEVICES.laptop).w; }
+  function applyZoom() {
+    if (dom.previewStage) dom.previewStage.style.zoom = String(zoomLevel);
+    if (dom.zoomValue) dom.zoomValue.textContent = Math.round(zoomLevel * 100) + '%';
+  }
+  function fitToWidth() {
+    if (!dom.previewCanvas) return;
+    const avail = Math.max(80, dom.previewCanvas.clientWidth - 32);
+    let z = avail / currentDesignWidth();
+    z = Math.max(ZOOM_MIN, Math.min(1, z)); // fit never upscales past 100%
+    zoomLevel = z; zoomMode = 'fit'; applyZoom();
+  }
+  function setZoom(z) {
+    zoomLevel = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, z));
+    zoomMode = 'manual'; applyZoom();
+  }
+  function zoomStep(dir) {
+    if (dir > 0) { const n = ZOOM_STEPS.find(s => s > zoomLevel + 1e-3); setZoom(n != null ? n : ZOOM_MAX); }
+    else { const n = ZOOM_STEPS.slice().reverse().find(s => s < zoomLevel - 1e-3); setZoom(n != null ? n : ZOOM_MIN); }
+  }
+  // refit on new render when in fit mode (hoisted; callable from renderPreview above)
+  function fitPreviewIfFit() { if (zoomMode === 'fit') fitToWidth(); }
+
+  if (dom.zoomInBtn) dom.zoomInBtn.addEventListener('click', () => zoomStep(1));
+  if (dom.zoomOutBtn) dom.zoomOutBtn.addEventListener('click', () => zoomStep(-1));
+  if (dom.zoomValue) dom.zoomValue.addEventListener('click', () => fitToWidth()); // % readout doubles as Fit
+  window.addEventListener('resize', () => { if (zoomMode === 'fit') fitToWidth(); });
+
+  // --- Device pod (Slice 2.1) — conceal/expand picker; replaces the inline Desktop/Mobile toolbar buttons ---
+  function setDevice(d) {
+    const dev = DEVICES[d] ? d : 'laptop';
+    currentDevice = dev;
+    const { w, h } = DEVICES[dev];
+    if (dom.preview) {
+      dom.preview.style.width = w + 'px';
+      dom.preview.style.height = h + 'px';
+      dom.preview.classList.toggle('framed', dev === 'mobile' || dev === 'tablet');
+    }
+    if (dom.deviceLabel) dom.deviceLabel.textContent = dev.charAt(0).toUpperCase() + dev.slice(1);
+    if (dom.deviceItems) dom.deviceItems.forEach(it => it.classList.toggle('active', it.dataset.device === dev));
+    if (zoomMode === 'fit') fitToWidth(); else applyZoom();
+  }
+  function closeDevicePod() {
+    if (dom.devicePod) dom.devicePod.classList.remove('open');
+    if (dom.deviceTrigger) dom.deviceTrigger.setAttribute('aria-expanded', 'false');
+  }
+  if (dom.deviceTrigger) dom.deviceTrigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const open = dom.devicePod.classList.toggle('open');
+    dom.deviceTrigger.setAttribute('aria-expanded', open ? 'true' : 'false');
   });
+  if (dom.deviceItems) dom.deviceItems.forEach(it => it.addEventListener('click', (e) => {
+    e.stopPropagation();
+    setDevice(it.dataset.device);
+    closeDevicePod();
+  }));
+  document.addEventListener('click', (e) => { if (dom.devicePod && !dom.devicePod.contains(e.target)) closeDevicePod(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDevicePod(); });
 
   dom.clearBtn.addEventListener('click', () => {
     dom.preview.src = 'about:blank';

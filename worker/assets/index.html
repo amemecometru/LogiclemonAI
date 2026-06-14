@@ -206,7 +206,7 @@
     #view-app .input-area button:hover { background: var(--copper-glow); box-shadow: 0 0 24px var(--trace-dim); }
     #view-app .input-area button:disabled { opacity: 0.4; cursor: not-allowed; }
     #view-app .input-area button svg { width: 20px; height: 20px; fill: currentColor; }
-    #view-app .panel-preview { flex: 1; display: flex; flex-direction: column; background: var(--base-dark); }
+    #view-app .panel-preview { flex: 1; display: flex; flex-direction: column; background: var(--base-dark); position: relative; }
     #view-app .panel-preview .toolbar {
       padding: 6px 14px; background: rgba(10, 14, 18, 0.9); border-bottom: 1px solid var(--trace-dim);
       display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-dim); font-family: 'Space Mono', monospace; flex-wrap: wrap;
@@ -226,11 +226,63 @@
       border-color: var(--patina-primary); color: var(--patina-primary);
     }
     #view-app .panel-preview .toolbar .api-btn:hover { background: var(--patina-primary); color: var(--base-dark); border-color: var(--patina-primary); }
-    iframe#preview {
-      flex: 1; width: 100%; border: none; background: #fff;
-      transition: max-width 0.3s ease;
+    #view-app .panel-preview .preview-canvas {
+      flex: 1; overflow: auto; display: grid; background: var(--base-dark);
+      -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y;
     }
-    iframe#preview.mobile { max-width: 375px; margin: 0 auto; border-left: 1px solid var(--trace-dim); border-right: 1px solid var(--trace-dim); }
+    #view-app .panel-preview .preview-stage { margin: auto; }
+    iframe#preview {
+      display: block; width: 1280px; height: 900px; border: none; background: #fff;
+      transition: width 0.3s ease, height 0.3s ease;
+    }
+    iframe#preview.framed { border-left: 1px solid var(--trace-dim); border-right: 1px solid var(--trace-dim); }
+    /* Slice 2 — always-visible compact zoom control, floated bottom-right; translucent so the preview stays clean. */
+    #view-app .panel-preview .preview-controls {
+      position: absolute; right: 16px; bottom: 16px; z-index: 6;
+      display: flex; align-items: flex-end; gap: 8px;
+    }
+    /* Slice 2.1 — reusable edge pod: collapsed trigger → hover(desktop)/tap(touch) menu. Reused by Devices + (later) Export. */
+    #view-app .preview-pod { position: relative; }
+    #view-app .preview-pod .pod-trigger {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(10, 14, 18, 0.6); border: 1px solid var(--trace-dim); color: var(--text-dim);
+      padding: 6px 10px; border-radius: 9px; cursor: pointer; font-family: 'Space Mono', monospace; font-size: 11px;
+      -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.3); transition: background 0.2s var(--transition), color 0.2s var(--transition);
+    }
+    #view-app .preview-pod .pod-trigger:hover { background: rgba(10,14,18,0.92); color: var(--copper-raw); }
+    #view-app .preview-pod .pod-caret { font-size: 9px; opacity: 0.7; }
+    #view-app .preview-pod .pod-menu {
+      display: none; position: absolute; left: 0; bottom: calc(100% + 6px);
+      min-width: 132px; padding: 5px; flex-direction: column; gap: 2px;
+      background: rgba(10, 14, 18, 0.97); border: 1px solid var(--trace-dim); border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    #view-app .preview-pod.open .pod-menu { display: flex; }
+    @media (hover: hover) { #view-app .preview-pod:hover .pod-menu { display: flex; } }
+    #view-app .preview-pod .pod-item {
+      background: none; border: none; color: var(--text-dim); text-align: left;
+      padding: 6px 9px; border-radius: 6px; cursor: pointer; font-family: 'Space Mono', monospace; font-size: 11px;
+      transition: all 0.15s var(--transition);
+    }
+    #view-app .preview-pod .pod-item:hover { background: rgba(227,126,68,0.12); color: var(--copper-raw); }
+    #view-app .preview-pod .pod-item.active { color: var(--copper-raw); font-weight: 700; }
+    #view-app .panel-preview .preview-zoom {
+      display: inline-flex; align-items: center; gap: 2px; padding: 3px; border-radius: 9px;
+      background: rgba(10, 14, 18, 0.6); border: 1px solid var(--trace-dim);
+      -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+      transition: background 0.2s var(--transition);
+    }
+    #view-app .panel-preview .preview-zoom:hover { background: rgba(10, 14, 18, 0.92); }
+    #view-app .panel-preview .preview-zoom button {
+      background: none; border: none; color: var(--text); cursor: pointer;
+      font-family: 'Space Mono', monospace; transition: color 0.15s var(--transition), background 0.15s var(--transition);
+    }
+    #view-app .panel-preview .preview-zoom .zoom-step { width: 26px; height: 24px; font-size: 15px; font-weight: 700; border-radius: 6px; line-height: 1; }
+    #view-app .panel-preview .preview-zoom .zoom-step:hover { color: var(--copper-raw); background: rgba(227,126,68,0.14); }
+    #view-app .panel-preview .preview-zoom .zoom-val { min-width: 52px; height: 24px; font-size: 11px; border-radius: 6px; color: var(--text-dim); }
+    #view-app .panel-preview .preview-zoom .zoom-val:hover { color: var(--copper-raw); background: rgba(227,126,68,0.14); }
     .model-selector { display: inline-flex; gap: 3px; align-items: center; }
     .model-selector .model-opt {
       background: none; border: 1px solid var(--trace-dim); color: var(--text-dim);
@@ -483,15 +535,35 @@
       <div class="panel-preview">
         <div class="toolbar">
           <span class="section-tag" style="margin:0;letter-spacing:1px;font-size:10px;">Preview</span>
-          <button class="toolbar-btn active" data-device="desktop">Desktop</button>
-          <button class="toolbar-btn" data-device="mobile">Mobile</button>
           <button class="toolbar-btn api-btn" id="appApiBtn">API</button>
           <button id="sendDesktopBtn" style="display:none;background:none;border:1px solid var(--success);color:var(--success);padding:3px 10px;border-radius:4px;cursor:pointer;font-size:10px;font-family:'Space Mono',monospace;">Desktop</button>
           <button id="webhookerBtn" style="display:none;background:none;border:1px solid var(--copper-raw);color:var(--copper-raw);padding:3px 10px;border-radius:4px;cursor:pointer;font-size:10px;font-family:'Space Mono',monospace;">Webhook</button>
           <span id="modelSelector" class="model-selector" style="display:none"></span>
           <button class="clear-btn" id="clearPreviewBtn">Clear</button>
         </div>
-        <iframe id="preview" sandbox="allow-scripts allow-same-origin" title="Live Preview"></iframe>
+        <div class="preview-canvas" id="previewCanvas">
+          <div class="preview-stage" id="previewStage">
+            <iframe id="preview" sandbox="allow-scripts allow-same-origin" title="Live Preview"></iframe>
+          </div>
+        </div>
+        <div class="preview-controls">
+          <div class="preview-pod" id="devicePod">
+            <button class="pod-trigger" id="deviceTrigger" type="button" aria-haspopup="true" aria-expanded="false" title="Device">
+              <span id="deviceLabel">Laptop</span><span class="pod-caret" aria-hidden="true">&#9652;</span>
+            </button>
+            <div class="pod-menu" id="deviceMenu" role="menu">
+              <button class="pod-item" type="button" role="menuitem" data-device="mobile" data-w="390" data-h="800">Mobile</button>
+              <button class="pod-item" type="button" role="menuitem" data-device="tablet" data-w="820" data-h="1180">Tablet</button>
+              <button class="pod-item active" type="button" role="menuitem" data-device="laptop" data-w="1280" data-h="900">Laptop</button>
+              <button class="pod-item" type="button" role="menuitem" data-device="desktop" data-w="1440" data-h="960">Desktop</button>
+            </div>
+          </div>
+          <div class="preview-zoom" id="previewZoom">
+            <button class="zoom-step" id="zoomOutBtn" type="button" aria-label="Zoom out">&minus;</button>
+            <button class="zoom-val" id="zoomValue" type="button" title="Fit to width" aria-label="Fit to width">100%</button>
+            <button class="zoom-step" id="zoomInBtn" type="button" aria-label="Zoom in">+</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
