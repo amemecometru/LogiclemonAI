@@ -19,5 +19,7 @@ opus4-8-handoff.md
 opus4-8-handoff-webhooks.patch
 generic-files/
 opus-files/
+OPENCODE-HANDOFF.md/
 worker/.wrangler/
 stripe-logiclemoai
+.dev.vars

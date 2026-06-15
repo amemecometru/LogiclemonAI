@@ -1,25 +1,17 @@
 {
-  "name": "webhooks.email",
-  "short_name": "webhooks",
-  "description": "Vibe-code anything. Email or webhook a prompt, get a live rendered UI.",
+  "name": "LogicLemonAI",
+  "short_name": "LogicLemonAI",
+  "description": "An AI design studio — vibe a UI on any device, then bridge it to production. Build anywhere, ship into your own stack.",
   "start_url": "/",
+  "scope": "/",
+  "id": "/",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#0f0f1a",
-  "theme_color": "#0f0f1a",
+  "background_color": "#04060a",
+  "theme_color": "#070b12",
   "categories": ["developer-tools", "productivity", "utilities"],
   "icons": [
-    {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ]
 }

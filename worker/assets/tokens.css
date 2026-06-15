@@ -1,0 +1,79 @@
+/* ============================================================================
+   GLAZIER KIT · tokens.css   (v2 — hardened)
+   Single source of truth. Pure CSS custom properties. No build, no dependency.
+   v2 changes: added pre-alpha'd glass tokens so glazier.css needs NO color-mix().
+   ============================================================================ */
+
+:root {
+  /* ---- Canvas (near-black → black) ---- */
+  --bg-void:        #04060a;
+  --bg-base:        #070b12;
+  --bg-raise:       #0b111b;
+
+  /* ---- Glazier blue (the glass) ---- */
+  --glazier-1:      #16273d;
+  --glazier-2:      #0d1726;
+  --glazier-edge:   #2f5f86;
+  --glazier-deep:   #0a2036;
+  /* pre-alpha'd glass fills — replace color-mix() for full browser support */
+  --glazier-glass-1: rgba(22, 39, 61, 0.78);   /* = #16273d @ 78% */
+  --glazier-glass-2: rgba(13, 23, 38, 0.72);   /* = #0d1726 @ 72% */
+
+  /* ---- Brushed metal (the silver) ---- */
+  --metal-hi:       #eef2f6;
+  --metal-1:        #d4dbe3;
+  --metal-2:        #b9c2cc;
+  --metal-3:        #9aa4b1;
+  --metal-4:        #7e8a98;
+  --metal-lo:       #6c7886;
+
+  /* ---- Electric teal (accent / selection / glow) ---- */
+  --teal:           #3fe0d0;
+  --teal-bright:    #6bf0e3;
+  --teal-ink:       #0a8f81;   /* deepened teal — legible on silver */
+  --teal-soft:      rgba(63, 224, 208, 0.45);
+  --teal-faint:     rgba(63, 224, 208, 0.14);
+
+  /* ---- Warm accent (sparing counterpoint: red-ish → amber) ---- */
+  --ember:          #ff6a3d;   /* red-ish */
+  --amber:          #f6a93b;   /* amber */
+  --warm-grad:      linear-gradient(135deg, #ff7a4d, #f6a93b);
+  --ember-soft:     rgba(255, 106, 61, 0.40);
+  --amber-soft:     rgba(246, 169, 59, 0.38);
+  --amber-faint:    rgba(246, 169, 59, 0.12);
+
+  /* ---- Text ---- */
+  --ink-on-dark:    #e6edf5;
+  --ink-on-dark-dim:#9fb0c3;
+  --ink-on-metal:   #0a0e14;
+  --ink-on-metal-dim:#3a4555;
+
+  /* ---- Hairlines & dividers ---- */
+  --line-dark:      rgba(120, 170, 210, 0.16);
+  --line-metal:     rgba(255, 255, 255, 0.5);
+
+  /* ---- Blur ---- */
+  --blur-glass:     blur(18px) saturate(140%);
+
+  /* ---- Shadows (depth) ---- */
+  --shadow-card:    0 24px 60px rgba(0, 0, 0, 0.55);
+  --shadow-raise:   0 10px 30px rgba(0, 0, 0, 0.45);
+  --inset-glass:    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --inset-metal:    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+                    inset 0 -1px 2px rgba(0, 0, 0, 0.28);
+
+  /* ---- Radii ---- */
+  --r-sm: 8px;  --r-md: 14px;  --r-lg: 20px;  --r-pill: 999px;
+
+  /* ---- Spacing scale ---- */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 24px; --sp-6: 32px; --sp-7: 48px; --sp-8: 64px;
+
+  /* ---- Type ---- */
+  --font-ui:   'Outfit', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, 'SF Mono', monospace;
+
+  /* ---- Motion ---- */
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --t-fast: 0.15s;  --t-base: 0.3s;
+}
