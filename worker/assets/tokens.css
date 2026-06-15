@@ -46,7 +46,7 @@
   --ink-on-dark:    #e6edf5;
   --ink-on-dark-dim:#9fb0c3;
   --ink-on-metal:   #0a0e14;
-  --ink-on-metal-dim:#3a4555;
+  --ink-on-metal-dim:#262d37;   /* darker slate — high contrast on silver (no low-opacity grey) */
 
   /* ---- Hairlines & dividers ---- */
   --line-dark:      rgba(120, 170, 210, 0.16);

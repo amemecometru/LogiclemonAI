@@ -93,7 +93,7 @@
 
   <script>
     function workerBase(){ return (localStorage.getItem('webhooks_email_worker') || window.location.origin).replace(/\/+$/, ''); }
-    function startOAuth(p){ window.location.href = workerBase() + '/api/auth/' + p + '?redirect=' + encodeURIComponent(window.location.href); }
+    function startOAuth(p){ window.location.href = workerBase() + '/api/auth/' + p + '?redirect=' + encodeURIComponent('/'); }
     document.getElementById('gh').onclick = function(){ startOAuth('github'); };
     document.getElementById('go').onclick = function(){ startOAuth('google'); };
     document.getElementById('notify').onclick = function(){
