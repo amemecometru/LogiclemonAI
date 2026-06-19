@@ -1,8 +1,1290 @@
 
 const ASSETS = {};
 
+ASSETS["glazier.css"] = {
+  contentType: "text/css",
+  content: `/* ============================================================================
+   GLAZIER KIT · glazier.css   (v2 — hardened)
+   Hard aesthetics crafted ONCE as classes. Depends only on tokens.css.
+   v2 changes:
+     • EVERY class is namespaced \`glz-\` → cannot collide with the existing
+       copper/patina stylesheet (resolves the .btn / pseudo-element concerns).
+     • color-mix() removed → uses pre-alpha'd --glazier-glass-* tokens.
+     • .glz-btn defaults to width:auto; use .glz-btn-block for full-width.
+   Apply these classes to NEW markup only — never bolt onto already-themed
+   elements (keeps ::before/::after exclusively ours).
+   ============================================================================ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+.glz-body {
+  margin: 0;
+  font-family: var(--font-ui);
+  color: var(--ink-on-dark);
+  background: var(--bg-void);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---- CANVAS ---- */
+.glz-canvas {
+  position: relative;
+  min-height: 100vh;
+  background:
+    radial-gradient(1100px 600px at 50% -10%, rgba(63, 224, 208, 0.10), transparent 60%),
+    radial-gradient(900px 700px at 85% 110%, rgba(36, 75, 110, 0.30), transparent 60%),
+    linear-gradient(180deg, var(--bg-base), var(--bg-void));
+  overflow: hidden;
+}
+.glz-canvas::before {
+  content: "";
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(120, 170, 210, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120, 170, 210, 0.05) 1px, transparent 1px);
+  background-size: 44px 44px;
+  -webkit-mask-image: radial-gradient(circle at 50% 40%, #000 30%, transparent 78%);
+  mask-image: radial-gradient(circle at 50% 40%, #000 30%, transparent 78%);
+  pointer-events: none;
+}
+
+/* ---- SURFACE: GLASS (no color-mix) ---- */
+.glz-surface-glass {
+  position: relative;
+  background: linear-gradient(160deg, var(--glazier-glass-1), var(--glazier-glass-2));
+  -webkit-backdrop-filter: var(--blur-glass);
+  backdrop-filter: var(--blur-glass);
+  border: 1px solid var(--line-dark);
+  border-radius: var(--r-lg);
+  box-shadow: var(--inset-glass), var(--shadow-card);
+}
+.glz-surface-glass::after {
+  content: "";
+  position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(180deg, rgba(140, 200, 230, 0.10), transparent 22%);
+}
+
+/* ---- SURFACE: METAL (brushed silver) ---- */
+.glz-surface-metal {
+  position: relative;
+  color: var(--ink-on-metal);
+  background:
+    linear-gradient(176deg, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0) 12%),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0 1px, rgba(0,0,0,0.04) 1px 3px),
+    linear-gradient(145deg, var(--metal-hi) 0%, var(--metal-1) 16%, var(--metal-3) 40%,
+      var(--metal-2) 58%, var(--metal-4) 80%, var(--metal-1) 100%);
+  border: 1px solid var(--line-metal);
+  border-radius: var(--r-lg);
+  box-shadow: var(--inset-metal), var(--shadow-raise);
+}
+.glz-surface-metal::before {
+  content: "";
+  position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  opacity: 0.10; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---- ACCENT: TEAL ---- */
+.glz-glow-teal {
+  box-shadow: 0 0 0 1px var(--teal-soft), 0 0 18px rgba(63, 224, 208, 0.30), var(--shadow-raise);
+}
+.glz-text-teal { color: var(--teal); }
+.glz-text-amber { color: var(--amber); }
+.glz-glow-amber { box-shadow: 0 0 0 1px var(--amber-soft), 0 0 18px rgba(246,169,59,0.26), var(--shadow-raise); }
+
+/* Brushed-metal button (black text — the readability rule) */
+.glz-btn-metal {
+  color: var(--ink-on-metal); border: 1px solid var(--line-metal); font-weight: 700;
+  background:
+    linear-gradient(176deg, rgba(255,255,255,0.60) 0%, rgba(255,255,255,0) 12%),
+    linear-gradient(145deg, var(--metal-hi), var(--metal-2) 45%, var(--metal-4) 80%, var(--metal-1));
+  box-shadow: var(--inset-metal);
+}
+.glz-btn-metal:hover { filter: brightness(1.05); transform: translateY(-1px); background:
+    linear-gradient(176deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0) 12%),
+    linear-gradient(145deg, var(--metal-hi), var(--metal-1) 45%, var(--metal-3) 80%, var(--metal-hi)); }
+
+/* ---- TEXT-READABLE (black on metal, deep-teal on hover/active) ---- */
+.glz-text-readable { color: var(--ink-on-metal); }
+.glz-text-readable.glz-dim { color: var(--ink-on-metal-dim); }
+
+.glz-queue-item {
+  position: relative;
+  display: flex; align-items: center; gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  color: var(--ink-on-metal);
+  font-family: var(--font-mono); font-size: 13px;
+  border-radius: var(--r-sm); cursor: pointer;
+  transition: color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
+}
+.glz-queue-item::before {
+  content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%) scaleY(0);
+  width: 3px; height: 64%; border-radius: 2px; background: var(--teal);
+  box-shadow: 0 0 10px var(--teal-soft); transition: transform var(--t-fast) var(--ease);
+}
+.glz-queue-item:hover { color: var(--teal-ink); background: rgba(255, 255, 255, 0.28); }
+.glz-queue-item.glz-active { color: var(--teal-ink); background: rgba(63, 224, 208, 0.16); font-weight: 700; }
+.glz-queue-item.glz-active::before { transform: translateY(-50%) scaleY(1); }
+
+/* ---- ELECTRIC LINES (the webhook-bridge motif) ---- */
+.glz-electric-line { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.glz-electric-line path {
+  fill: none; stroke: var(--teal); stroke-width: 1.4; stroke-dasharray: 5 9;
+  filter: drop-shadow(0 0 4px var(--teal-soft)); animation: glz-flow 2.6s linear infinite; opacity: 0.85;
+}
+.glz-electric-line path.glz-slow { animation-duration: 4.2s; opacity: 0.5; }
+@keyframes glz-flow { to { stroke-dashoffset: -56; } }
+@media (prefers-reduced-motion: reduce) { .glz-electric-line path { animation: none; } }
+
+.glz-node-dot {
+  width: 9px; height: 9px; border-radius: 50%; background: var(--teal);
+  box-shadow: 0 0 0 4px var(--teal-faint), 0 0 14px var(--teal-soft);
+}
+
+/* ---- CONTROLS ---- */
+.glz-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-3);
+  width: auto;
+  padding: 13px 18px;
+  font-family: var(--font-ui); font-size: 14px; font-weight: 600;
+  border-radius: var(--r-md); cursor: pointer;
+  border: 1px solid var(--line-dark); color: var(--ink-on-dark);
+  background: rgba(255, 255, 255, 0.04); transition: all var(--t-base) var(--ease);
+}
+.glz-btn:hover { border-color: var(--teal-soft); background: rgba(63, 224, 208, 0.08); transform: translateY(-1px); }
+.glz-btn svg { width: 18px; height: 18px; }
+.glz-btn-block { width: 100%; }
+.glz-btn-primary {
+  border: none; color: #04201d; font-weight: 700;
+  background: linear-gradient(135deg, var(--teal-bright), var(--teal));
+  box-shadow: 0 0 22px rgba(63, 224, 208, 0.35);
+}
+.glz-btn-primary:hover { filter: brightness(1.06); transform: translateY(-1px); }
+
+.glz-field {
+  width: 100%; padding: 13px 16px;
+  font-family: var(--font-mono); font-size: 13px; color: var(--ink-on-dark);
+  background: rgba(4, 8, 14, 0.55); border: 1px solid var(--line-dark);
+  border-radius: var(--r-md); transition: all var(--t-base) var(--ease);
+}
+.glz-field::placeholder { color: var(--ink-on-dark-dim); }
+.glz-field:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal-faint); }
+
+.glz-divider { display: flex; align-items: center; gap: var(--sp-4); color: var(--ink-on-dark-dim);
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px; }
+.glz-divider::before, .glz-divider::after { content: ""; flex: 1; height: 1px; background: var(--line-dark); }
+.glz-label-mono { font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--ink-on-dark-dim); }
+`,
+};
+
+ASSETS["icon.svg"] = {
+  contentType: "image/svg+xml",
+  content: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" fill="none"><rect width="192" height="192" fill="#04060a" rx="32"/><path d="M96 48c-26.5 0-48 18.5-48 48 0 29.5 21.5 64 48 64s48-34.5 48-64c0-29.5-21.5-48-48-48zm-10 24c5.5 0 10 4.5 10 10s-4.5 10-10 10-10-4.5-10-10 4.5-10 10-10zm20 40c-5.5 0-10-4.5-10-10s4.5-10 10-10 10 4.5 10 10-4.5 10-10 10z" fill="#3fe0d0" stroke="#3fe0d0" stroke-width="2"/><circle cx="96" cy="96" r="8" fill="#ff6a3d"/><path d="M96 36v20M96 140v20M36 96h20M140 96h20" stroke="#3fe0d0" stroke-width="3" stroke-linecap="round" opacity="0.4"/></svg>`,
+};
+
+ASSETS["tokens.css"] = {
+  contentType: "text/css",
+  content: `/* ============================================================================
+   GLAZIER KIT · tokens.css   (v2 — hardened)
+   Single source of truth. Pure CSS custom properties. No build, no dependency.
+   v2 changes: added pre-alpha'd glass tokens so glazier.css needs NO color-mix().
+   ============================================================================ */
+
+:root {
+  /* ---- Canvas (near-black → black) ---- */
+  --bg-void:        #04060a;
+  --bg-base:        #070b12;
+  --bg-raise:       #0b111b;
+
+  /* ---- Glazier blue (the glass) ---- */
+  --glazier-1:      #16273d;
+  --glazier-2:      #0d1726;
+  --glazier-edge:   #2f5f86;
+  --glazier-deep:   #0a2036;
+  /* pre-alpha'd glass fills — replace color-mix() for full browser support */
+  --glazier-glass-1: rgba(22, 39, 61, 0.78);   /* = #16273d @ 78% */
+  --glazier-glass-2: rgba(13, 23, 38, 0.72);   /* = #0d1726 @ 72% */
+
+  /* ---- Brushed metal (the silver) ---- */
+  --metal-hi:       #eef2f6;
+  --metal-1:        #d4dbe3;
+  --metal-2:        #b9c2cc;
+  --metal-3:        #9aa4b1;
+  --metal-4:        #7e8a98;
+  --metal-lo:       #6c7886;
+
+  /* ---- Electric teal (accent / selection / glow) ---- */
+  --teal:           #3fe0d0;
+  --teal-bright:    #6bf0e3;
+  --teal-ink:       #0a8f81;   /* deepened teal — legible on silver */
+  --teal-soft:      rgba(63, 224, 208, 0.45);
+  --teal-faint:     rgba(63, 224, 208, 0.14);
+
+  /* ---- Warm accent (sparing counterpoint: red-ish → amber) ---- */
+  --ember:          #ff6a3d;   /* red-ish */
+  --amber:          #f6a93b;   /* amber */
+  --warm-grad:      linear-gradient(135deg, #ff7a4d, #f6a93b);
+  --ember-soft:     rgba(255, 106, 61, 0.40);
+  --amber-soft:     rgba(246, 169, 59, 0.38);
+  --amber-faint:    rgba(246, 169, 59, 0.12);
+
+  /* ---- Text ---- */
+  --ink-on-dark:    #e6edf5;
+  --ink-on-dark-dim:#9fb0c3;
+  --ink-on-metal:   #0a0e14;
+  --ink-on-metal-dim:#262d37;   /* darker slate — high contrast on silver (no low-opacity grey) */
+
+  /* ---- Hairlines & dividers ---- */
+  --line-dark:      rgba(120, 170, 210, 0.16);
+  --line-metal:     rgba(255, 255, 255, 0.5);
+
+  /* ---- Blur ---- */
+  --blur-glass:     blur(18px) saturate(140%);
+
+  /* ---- Shadows (depth) ---- */
+  --shadow-card:    0 24px 60px rgba(0, 0, 0, 0.55);
+  --shadow-raise:   0 10px 30px rgba(0, 0, 0, 0.45);
+  --inset-glass:    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --inset-metal:    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+                    inset 0 -1px 2px rgba(0, 0, 0, 0.28);
+
+  /* ---- Radii ---- */
+  --r-sm: 8px;  --r-md: 14px;  --r-lg: 20px;  --r-pill: 999px;
+
+  /* ---- Spacing scale ---- */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 24px; --sp-6: 32px; --sp-7: 48px; --sp-8: 64px;
+
+  /* ---- Type ---- */
+  --font-ui:   'Outfit', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, 'SF Mono', monospace;
+
+  /* ---- Motion ---- */
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --t-fast: 0.15s;  --t-base: 0.3s;
+}
+`,
+};
+
+ASSETS["fix.py"] = {
+  contentType: "text/x-python",
+  content: `import re
+
+with open('studio.html', 'r') as f:
+    c = f.read()
+
+# 1. White canvas → light grey
+c = c.replace('background:#fff;border-radius:6px', 'background:#e8e8ec;border-radius:6px')
+
+# 2. Handoff pill → top-left (out of zoom/device button way)
+c = c.replace('.handoff-trigger{position:absolute;left:16px;bottom:16px;', '.handoff-trigger{position:absolute;left:16px;top:16px;')
+
+# 3. Add Great Vibes cursive font
+c = c.replace(
+    'family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">',
+    'family=Space+Mono:wght@400;700&family=Great+Vibes&display=swap" rel="stylesheet">'
+)
+
+# 4. Add cursive CSS + empty-state HTML
+css = '''.preview-canvas{flex:1;overflow:auto;display:grid;background:var(--bg-void);-webkit-overflow-scrolling:touch;position:relative;}
+.preview-empty-brand{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:1;opacity:0;transition:opacity .4s var(--ease);}
+.preview-empty-brand.visible{opacity:1;}
+.cursive-dip{font-family:'Great Vibes',cursive;font-size:clamp(48px,8vw,120px);color:rgba(10,14,22,0.08);letter-spacing:2px;transform:rotate(-3deg);user-select:none;}'''
+c = c.replace(
+    '.preview-canvas{flex:1;overflow:auto;display:grid;background:var(--bg-void);-webkit-overflow-scrolling:touch;}',
+    css
+)
+c = c.replace(
+    '<iframe id="preview" sandbox="allow-scripts allow-same-origin" title="Live Preview"></iframe>',
+    '<iframe id="preview" sandbox="allow-scripts allow-same-origin" title="Live Preview"></iframe>\\n              <div class="preview-empty-brand" id="previewEmptyBrand"><div class="cursive-dip">DipDesigns.app</div></div>'
+)
+
+with open('studio.html', 'w') as f:
+    f.write(c)
+
+print('Done. 4 fixes applied.')
+`,
+};
+
+ASSETS["studio.html"] = {
+  contentType: "text/html",
+  content: `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DipDesigns — Studio</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+/* ============================================================================
+   GLAZIER KIT · tokens.css   (v2 — hardened)
+   Single source of truth. Pure CSS custom properties. No build, no dependency.
+   v2 changes: added pre-alpha'd glass tokens so glazier.css needs NO color-mix().
+   ============================================================================ */
+
+:root {
+  /* ---- Canvas (near-black → black) ---- */
+  --bg-void:        #04060a;
+  --bg-base:        #070b12;
+  --bg-raise:       #0b111b;
+
+  /* ---- Glazier blue (the glass) ---- */
+  --glazier-1:      #16273d;
+  --glazier-2:      #0d1726;
+  --glazier-edge:   #2f5f86;
+  --glazier-deep:   #0a2036;
+  /* pre-alpha'd glass fills — replace color-mix() for full browser support */
+  --glazier-glass-1: rgba(22, 39, 61, 0.78);   /* = #16273d @ 78% */
+  --glazier-glass-2: rgba(13, 23, 38, 0.72);   /* = #0d1726 @ 72% */
+
+  /* ---- Brushed metal (the silver) ---- */
+  --metal-hi:       #eef2f6;
+  --metal-1:        #d4dbe3;
+  --metal-2:        #b9c2cc;
+  --metal-3:        #9aa4b1;
+  --metal-4:        #7e8a98;
+  --metal-lo:       #6c7886;
+
+  /* ---- Electric teal (accent / selection / glow) ---- */
+  --teal:           #3fe0d0;
+  --teal-bright:    #6bf0e3;
+  --teal-ink:       #0a8f81;   /* deepened teal — legible on silver */
+  --teal-soft:      rgba(63, 224, 208, 0.45);
+  --teal-faint:     rgba(63, 224, 208, 0.14);
+
+  /* ---- Warm accent (sparing counterpoint: red-ish → amber) ---- */
+  --ember:          #ff6a3d;   /* red-ish */
+  --amber:          #f6a93b;   /* amber */
+  --warm-grad:      linear-gradient(135deg, #ff7a4d, #f6a93b);
+  --ember-soft:     rgba(255, 106, 61, 0.40);
+  --amber-soft:     rgba(246, 169, 59, 0.38);
+  --amber-faint:    rgba(246, 169, 59, 0.12);
+
+  /* ---- Text ---- */
+  --ink-on-dark:    #e6edf5;
+  --ink-on-dark-dim:#9fb0c3;
+  --ink-on-metal:   #0a0e14;
+  --ink-on-metal-dim:#262d37;   /* darker slate — high contrast on silver (no low-opacity grey) */
+
+  /* ---- Hairlines & dividers ---- */
+  --line-dark:      rgba(120, 170, 210, 0.16);
+  --line-metal:     rgba(255, 255, 255, 0.5);
+
+  /* ---- Blur ---- */
+  --blur-glass:     blur(18px) saturate(140%);
+
+  /* ---- Shadows (depth) ---- */
+  --shadow-card:    0 24px 60px rgba(0, 0, 0, 0.55);
+  --shadow-raise:   0 10px 30px rgba(0, 0, 0, 0.45);
+  --inset-glass:    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --inset-metal:    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+                    inset 0 -1px 2px rgba(0, 0, 0, 0.28);
+
+  /* ---- Radii ---- */
+  --r-sm: 8px;  --r-md: 14px;  --r-lg: 20px;  --r-pill: 999px;
+
+  /* ---- Spacing scale ---- */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 24px; --sp-6: 32px; --sp-7: 48px; --sp-8: 64px;
+
+  /* ---- Type ---- */
+  --font-ui:   'Outfit', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, 'SF Mono', monospace;
+
+  /* ---- Motion ---- */
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --t-fast: 0.15s;  --t-base: 0.3s;
+}
+
+</style>
+  <style>
+/* ============================================================================
+   GLAZIER KIT · glazier.css   (v2 — hardened)
+   Hard aesthetics crafted ONCE as classes. Depends only on tokens.css.
+   v2 changes:
+     • EVERY class is namespaced \`glz-\` → cannot collide with the existing
+       copper/patina stylesheet (resolves the .btn / pseudo-element concerns).
+     • color-mix() removed → uses pre-alpha'd --glazier-glass-* tokens.
+     • .glz-btn defaults to width:auto; use .glz-btn-block for full-width.
+   Apply these classes to NEW markup only — never bolt onto already-themed
+   elements (keeps ::before/::after exclusively ours).
+   ============================================================================ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+.glz-body {
+  margin: 0;
+  font-family: var(--font-ui);
+  color: var(--ink-on-dark);
+  background: var(--bg-void);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---- CANVAS ---- */
+.glz-canvas {
+  position: relative;
+  min-height: 100vh;
+  background:
+    radial-gradient(1100px 600px at 50% -10%, rgba(63, 224, 208, 0.10), transparent 60%),
+    radial-gradient(900px 700px at 85% 110%, rgba(36, 75, 110, 0.30), transparent 60%),
+    linear-gradient(180deg, var(--bg-base), var(--bg-void));
+  overflow: hidden;
+}
+.glz-canvas::before {
+  content: "";
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(120, 170, 210, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120, 170, 210, 0.05) 1px, transparent 1px);
+  background-size: 44px 44px;
+  -webkit-mask-image: radial-gradient(circle at 50% 40%, #000 30%, transparent 78%);
+  mask-image: radial-gradient(circle at 50% 40%, #000 30%, transparent 78%);
+  pointer-events: none;
+}
+
+/* ---- SURFACE: GLASS (no color-mix) ---- */
+.glz-surface-glass {
+  position: relative;
+  background: linear-gradient(160deg, var(--glazier-glass-1), var(--glazier-glass-2));
+  -webkit-backdrop-filter: var(--blur-glass);
+  backdrop-filter: var(--blur-glass);
+  border: 1px solid var(--line-dark);
+  border-radius: var(--r-lg);
+  box-shadow: var(--inset-glass), var(--shadow-card);
+}
+.glz-surface-glass::after {
+  content: "";
+  position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(180deg, rgba(140, 200, 230, 0.10), transparent 22%);
+}
+
+/* ---- SURFACE: METAL (brushed silver) ---- */
+.glz-surface-metal {
+  position: relative;
+  color: var(--ink-on-metal);
+  background:
+    linear-gradient(176deg, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0) 12%),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0 1px, rgba(0,0,0,0.04) 1px 3px),
+    linear-gradient(145deg, var(--metal-hi) 0%, var(--metal-1) 16%, var(--metal-3) 40%,
+      var(--metal-2) 58%, var(--metal-4) 80%, var(--metal-1) 100%);
+  border: 1px solid var(--line-metal);
+  border-radius: var(--r-lg);
+  box-shadow: var(--inset-metal), var(--shadow-raise);
+}
+.glz-surface-metal::before {
+  content: "";
+  position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  opacity: 0.10; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---- ACCENT: TEAL ---- */
+.glz-glow-teal {
+  box-shadow: 0 0 0 1px var(--teal-soft), 0 0 18px rgba(63, 224, 208, 0.30), var(--shadow-raise);
+}
+.glz-text-teal { color: var(--teal); }
+.glz-text-amber { color: var(--amber); }
+.glz-glow-amber { box-shadow: 0 0 0 1px var(--amber-soft), 0 0 18px rgba(246,169,59,0.26), var(--shadow-raise); }
+
+/* Brushed-metal button (black text — the readability rule) */
+.glz-btn-metal {
+  color: var(--ink-on-metal); border: 1px solid var(--line-metal); font-weight: 700;
+  background:
+    linear-gradient(176deg, rgba(255,255,255,0.60) 0%, rgba(255,255,255,0) 12%),
+    linear-gradient(145deg, var(--metal-hi), var(--metal-2) 45%, var(--metal-4) 80%, var(--metal-1));
+  box-shadow: var(--inset-metal);
+}
+.glz-btn-metal:hover { filter: brightness(1.05); transform: translateY(-1px); background:
+    linear-gradient(176deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0) 12%),
+    linear-gradient(145deg, var(--metal-hi), var(--metal-1) 45%, var(--metal-3) 80%, var(--metal-hi)); }
+
+/* ---- TEXT-READABLE (black on metal, deep-teal on hover/active) ---- */
+.glz-text-readable { color: var(--ink-on-metal); }
+.glz-text-readable.glz-dim { color: var(--ink-on-metal-dim); }
+
+.glz-queue-item {
+  position: relative;
+  display: flex; align-items: center; gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  color: var(--ink-on-metal);
+  font-family: var(--font-mono); font-size: 13px;
+  border-radius: var(--r-sm); cursor: pointer;
+  transition: color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
+}
+.glz-queue-item::before {
+  content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%) scaleY(0);
+  width: 3px; height: 64%; border-radius: 2px; background: var(--teal);
+  box-shadow: 0 0 10px var(--teal-soft); transition: transform var(--t-fast) var(--ease);
+}
+.glz-queue-item:hover { color: var(--teal-ink); background: rgba(255, 255, 255, 0.28); }
+.glz-queue-item.glz-active { color: var(--teal-ink); background: rgba(63, 224, 208, 0.16); font-weight: 700; }
+.glz-queue-item.glz-active::before { transform: translateY(-50%) scaleY(1); }
+
+/* ---- ELECTRIC LINES (the webhook-bridge motif) ---- */
+.glz-electric-line { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.glz-electric-line path {
+  fill: none; stroke: var(--teal); stroke-width: 1.4; stroke-dasharray: 5 9;
+  filter: drop-shadow(0 0 4px var(--teal-soft)); animation: glz-flow 2.6s linear infinite; opacity: 0.85;
+}
+.glz-electric-line path.glz-slow { animation-duration: 4.2s; opacity: 0.5; }
+@keyframes glz-flow { to { stroke-dashoffset: -56; } }
+@media (prefers-reduced-motion: reduce) { .glz-electric-line path { animation: none; } }
+
+.glz-node-dot {
+  width: 9px; height: 9px; border-radius: 50%; background: var(--teal);
+  box-shadow: 0 0 0 4px var(--teal-faint), 0 0 14px var(--teal-soft);
+}
+
+/* ---- CONTROLS ---- */
+.glz-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-3);
+  width: auto;                       /* v2: was 100% — full-width is opt-in now */
+  padding: 13px 18px;
+  font-family: var(--font-ui); font-size: 14px; font-weight: 600;
+  border-radius: var(--r-md); cursor: pointer;
+  border: 1px solid var(--line-dark); color: var(--ink-on-dark);
+  background: rgba(255, 255, 255, 0.04); transition: all var(--t-base) var(--ease);
+}
+.glz-btn:hover { border-color: var(--teal-soft); background: rgba(63, 224, 208, 0.08); transform: translateY(-1px); }
+.glz-btn svg { width: 18px; height: 18px; }
+.glz-btn-block { width: 100%; }       /* opt-in full width (used by stacked auth buttons) */
+.glz-btn-primary {
+  border: none; color: #04201d; font-weight: 700;
+  background: linear-gradient(135deg, var(--teal-bright), var(--teal));
+  box-shadow: 0 0 22px rgba(63, 224, 208, 0.35);
+}
+.glz-btn-primary:hover { filter: brightness(1.06); transform: translateY(-1px); }
+
+.glz-field {
+  width: 100%; padding: 13px 16px;
+  font-family: var(--font-mono); font-size: 13px; color: var(--ink-on-dark);
+  background: rgba(4, 8, 14, 0.55); border: 1px solid var(--line-dark);
+  border-radius: var(--r-md); transition: all var(--t-base) var(--ease);
+}
+.glz-field::placeholder { color: var(--ink-on-dark-dim); }
+.glz-field:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal-faint); }
+
+.glz-divider { display: flex; align-items: center; gap: var(--sp-4); color: var(--ink-on-dark-dim);
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px; }
+.glz-divider::before, .glz-divider::after { content: ""; flex: 1; height: 1px; background: var(--line-dark); }
+.glz-label-mono { font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--ink-on-dark-dim); }
+
+</style>
+  <style>
+  /* ===== STUDIO LAYOUT (Glazier) — page-specific only; kit does the materials ===== */
+  body{height:100vh;overflow:hidden;}
+  .bg{position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:radial-gradient(1100px 560px at 50% -12%,rgba(63,224,208,.07),transparent 60%),
+    radial-gradient(700px 600px at 94% 2%,rgba(246,169,59,.05),transparent 58%),
+    radial-gradient(820px 700px at 4% 110%,rgba(36,75,110,.24),transparent 60%),
+    linear-gradient(180deg,var(--bg-base),var(--bg-void));}
+  .app-root{position:relative;z-index:1;height:100vh;display:flex;flex-direction:column;}
+
+  /* header */
+  header{display:flex;align-items:center;gap:14px;padding:12px 18px;border-bottom:1px solid var(--line-dark);flex-shrink:0;position:relative;z-index:100;}
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand .badge{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;}
+  .brand .badge .glz-node-dot{width:7px;height:7px;}
+  .brand h1{font-size:16px;font-weight:800;letter-spacing:-.3px;margin:0;}
+  .brand h1 span{color:var(--teal);}
+  header nav{display:flex;gap:2px;margin-left:8px;}
+  header nav button{background:none;border:none;color:var(--ink-on-dark-dim);font-family:var(--font-ui);font-size:13.5px;padding:7px 13px;border-radius:8px;cursor:pointer;transition:all var(--t-fast) var(--ease);}
+  header nav button:hover{color:var(--ink-on-dark);background:rgba(255,255,255,.04);}
+  header nav button.active{color:var(--teal);background:rgba(63,224,208,.10);font-weight:600;}
+  .status{margin-left:auto;display:inline-flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:11px;color:var(--ink-on-dark-dim);}
+  .status .dot{width:7px;height:7px;border-radius:50%;background:var(--amber);box-shadow:0 0 8px var(--amber-soft);}
+  .auth-cluster{display:flex;gap:8px;}
+  .auth-btn{background:rgba(255,255,255,.04);border:1px solid var(--line-dark);color:var(--ink-on-dark);font-family:var(--font-ui);font-size:12.5px;padding:7px 12px;border-radius:10px;cursor:pointer;transition:all var(--t-base) var(--ease);}
+  .auth-btn:hover{border-color:var(--teal-soft);background:rgba(63,224,208,.08);color:var(--teal);}
+  .signed-in-pill{display:none;align-items:center;gap:6px;font-family:var(--font-mono);font-size:11px;color:var(--teal);border:1px solid var(--teal-soft);background:rgba(63,224,208,.08);padding:6px 11px;border-radius:999px;}
+  .settings-btn{background:rgba(255,255,255,.04);border:1px solid var(--line-dark);color:var(--ink-on-dark-dim);font-family:var(--font-mono);font-size:11px;padding:7px 11px;border-radius:10px;cursor:pointer;transition:all var(--t-base) var(--ease);}
+  .settings-btn:hover{border-color:var(--teal-soft);color:var(--teal);}
+
+  /* views */
+  .view{display:none;flex:1;min-height:0;}
+  .view.active{display:flex;}
+  #view-library,#view-pricing,#view-docs{overflow:auto;}
+
+  /* APP VIEW — split pane */
+  .container{flex:1;display:flex;gap:14px;padding:14px 18px 18px;min-height:0;width:100%;}
+  .panel-chat{width:360px;flex-shrink:0;display:flex;flex-direction:column;padding:14px;min-height:0;}
+  .messages{flex:1;overflow:auto;display:flex;flex-direction:column;gap:10px;padding:2px;}
+  .msg{max-width:92%;padding:10px 13px;border-radius:12px;font-size:13.5px;line-height:1.5;}
+  .msg.assistant{align-self:flex-start;background:rgba(255,255,255,.30);color:var(--ink-on-metal);border:1px solid rgba(0,0,0,.06);}
+  .msg.user{align-self:flex-end;background:rgba(63,224,208,.22);color:#06403a;border:1px solid var(--teal-soft);font-weight:600;}
+  .msg.typing{align-self:flex-start;color:var(--ink-on-metal-dim);font-family:var(--font-mono);font-size:12px;}
+  .msg.error{align-self:flex-start;background:rgba(255,106,61,.16);color:#7a2613;border:1px solid var(--ember-soft);}
+  .input-area{display:flex;gap:8px;align-items:flex-end;margin-top:12px;padding-top:12px;border-top:1px solid rgba(0,0,0,.10);}
+  #promptInput{flex:1;resize:none;max-height:120px;padding:11px 13px;border-radius:12px;border:1px solid rgba(0,0,0,.14);background:rgba(255,255,255,.55);color:var(--ink-on-metal);font-family:var(--font-ui);font-size:13.5px;}
+  #promptInput::placeholder{color:var(--ink-on-metal-dim);}
+  #promptInput:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-faint);}
+  #sendBtn{flex-shrink:0;width:40px;height:40px;border-radius:11px;border:none;cursor:pointer;background:linear-gradient(135deg,var(--teal-bright),var(--teal));color:#04201d;display:grid;place-items:center;transition:all var(--t-base) var(--ease);}
+  #sendBtn:hover{filter:brightness(1.06);transform:translateY(-1px);}
+  #sendBtn svg{width:20px;height:20px;fill:currentColor;}
+
+  .panel-preview{flex:1;display:flex;flex-direction:column;min-width:0;position:relative;border-radius:var(--r-lg);overflow:hidden;}
+  .toolbar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line-dark);flex-shrink:0;background:rgba(7,11,18,.5);}
+  .section-tag{font-family:var(--font-mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-on-dark-dim);}
+  .toolbar-btn,.clear-btn{background:rgba(255,255,255,.04);border:1px solid var(--line-dark);color:var(--ink-on-dark-dim);font-family:var(--font-mono);font-size:10px;padding:4px 11px;border-radius:7px;cursor:pointer;transition:all var(--t-base) var(--ease);}
+  .toolbar-btn:hover,.clear-btn:hover{border-color:var(--teal-soft);color:var(--teal);}
+  .api-btn{border-color:var(--teal-soft);color:var(--teal);}
+  .clear-btn{margin-left:auto;}
+  .model-selector{display:inline-flex;gap:3px;align-items:center;}
+  .model-opt{background:none;border:1px solid var(--line-dark);color:var(--ink-on-dark-dim);padding:3px 8px;border-radius:6px;cursor:pointer;font-size:10px;font-family:var(--font-mono);transition:all var(--t-base) var(--ease);white-space:nowrap;}
+  .model-opt:hover{border-color:var(--teal-soft);color:var(--teal);}
+  .model-opt.active{background:var(--teal);color:var(--base-dark,#04201d);border-color:var(--teal);}
+
+  .preview-canvas{flex:1;overflow:auto;display:grid;background:var(--bg-void);-webkit-overflow-scrolling:touch;}
+  .preview-stage{margin:auto;}
+  iframe#preview{display:block;width:1280px;height:900px;border:none;background:#fff;border-radius:6px;transition:width .3s ease,height .3s ease;}
+  iframe#preview.framed{box-shadow:0 0 0 1px var(--trace-dim,rgba(120,170,210,.16));}
+
+  /* preview controls — silver pods + zoom + export, bottom-right */
+  .preview-controls{position:absolute;right:16px;top:16px;z-index:6;display:flex;align-items:flex-end;gap:8px;}
+  .preview-pod{position:relative;}
+  .pod-trigger{display:inline-flex;align-items:center;gap:6px;color:var(--ink-on-metal);padding:7px 11px;border-radius:9px;cursor:pointer;font-family:var(--font-mono);font-size:11px;font-weight:700;
+    border:1px solid var(--line-metal);
+    background:linear-gradient(176deg,rgba(255,255,255,.6) 0%,rgba(255,255,255,0) 12%),linear-gradient(145deg,var(--metal-hi),var(--metal-2) 45%,var(--metal-4) 80%,var(--metal-1));
+    box-shadow:var(--inset-metal),0 6px 16px rgba(0,0,0,.35);transition:filter var(--t-fast) var(--ease);}
+  .pod-trigger:hover{filter:brightness(1.05);}
+  .pod-caret{font-size:9px;opacity:.7;}
+  .pod-menu{display:none;position:absolute;left:0;bottom:calc(100% + 6px);min-width:140px;padding:5px;flex-direction:column;gap:2px;
+    background:rgba(10,14,18,.97);border:1px solid var(--line-dark);border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);}
+  .preview-pod.open .pod-menu{display:flex;}
+  /* click-to-open only (no hover-open): trigger opens it, stays until select/outside-click — avoids the hover-gap race */
+  .pod-item{background:none;border:none;color:var(--ink-on-dark-dim);text-align:left;padding:7px 10px;border-radius:6px;cursor:pointer;font-family:var(--font-mono);font-size:11px;transition:all var(--t-fast) var(--ease);}
+  .pod-item:hover{background:rgba(63,224,208,.12);color:var(--teal);}
+  .pod-item.active{color:var(--teal);font-weight:700;}
+  .preview-zoom{display:inline-flex;align-items:center;gap:2px;padding:3px;border-radius:9px;border:1px solid var(--line-metal);
+    background:linear-gradient(176deg,rgba(255,255,255,.6) 0%,rgba(255,255,255,0) 12%),linear-gradient(145deg,var(--metal-hi),var(--metal-2) 45%,var(--metal-4) 80%,var(--metal-1));box-shadow:var(--inset-metal),0 6px 16px rgba(0,0,0,.35);}
+  .zoom-step{background:none;border:none;color:var(--ink-on-metal);cursor:pointer;width:26px;height:24px;font-size:15px;font-weight:700;border-radius:6px;line-height:1;}
+  .zoom-step:hover{background:rgba(0,0,0,.10);}
+  .zoom-val{background:none;border:none;color:var(--ink-on-metal);cursor:pointer;min-width:50px;height:24px;font-size:11px;font-weight:700;border-radius:6px;font-family:var(--font-mono);}
+  .zoom-val:hover{background:rgba(0,0,0,.10);}
+
+  /* toast (Slice 3 export feedback) */
+  .copy-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--teal);color:#04201d;padding:9px 18px;border-radius:9px;font-family:var(--font-mono);font-size:12px;font-weight:700;z-index:2000;opacity:0;transition:opacity .3s ease;pointer-events:none;}
+  .copy-toast.show{opacity:1;}
+  /* header Export & Share pod — silver trigger, pops DOWN, right-aligned */
+  .hdr-export .pod-trigger{padding:7px 14px;}
+  .pod-down .pod-menu{top:calc(100% + 6px);bottom:auto;left:auto;right:0;}
+
+  /* LIBRARY / PRICING / DOCS — glass pages */
+  .page{max-width:1040px;margin:0 auto;padding:40px 6vw 60px;width:100%;}
+  .page h2{font-size:clamp(24px,3.4vw,36px);font-weight:800;letter-spacing:-.6px;margin:10px 0 8px;}
+  .subtitle{color:var(--ink-on-dark-dim);font-size:15px;line-height:1.6;margin:0 0 28px;max-width:60ch;}
+  .search-bar{width:100%;max-width:420px;padding:12px 15px;border-radius:12px;border:1px solid var(--line-dark);background:rgba(4,8,14,.5);color:var(--ink-on-dark);font-family:var(--font-mono);font-size:13px;margin-bottom:18px;}
+  .search-bar:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-faint);}
+  .category-filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px;}
+  .category-filters button{background:rgba(255,255,255,.04);border:1px solid var(--line-dark);color:var(--ink-on-dark-dim);padding:6px 13px;border-radius:999px;cursor:pointer;font-size:12px;font-family:var(--font-mono);transition:all var(--t-fast) var(--ease);}
+  .category-filters button:hover{color:var(--teal);border-color:var(--teal-soft);}
+  .category-filters button.active{background:var(--teal);color:#04201d;border-color:var(--teal);font-weight:700;}
+  .skill-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;}
+  .skill-card{position:relative;background:linear-gradient(160deg,var(--glazier-glass-1),var(--glazier-glass-2));border:1px solid var(--line-dark);border-radius:var(--r-lg);padding:18px;box-shadow:var(--inset-glass);transition:transform var(--t-base) var(--ease),border-color var(--t-base) var(--ease);}
+  .skill-card:hover{transform:translateY(-2px);border-color:var(--teal-soft);}
+  .skill-card .tag{font-family:var(--font-mono);font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--teal);}
+  .skill-card h3{margin:8px 0 6px;font-size:16px;font-weight:700;}
+  .skill-card p{color:var(--ink-on-dark-dim);font-size:13px;line-height:1.5;margin:0 0 14px;}
+  .skill-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;font-family:var(--font-mono);font-size:10px;color:var(--ink-on-dark-dim);}
+  .use-btn{background:linear-gradient(135deg,var(--teal-bright),var(--teal));color:#04201d;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:11px;font-weight:700;font-family:var(--font-ui);}
+  .use-btn:hover{filter:brightness(1.06);}
+
+  .pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;}
+  .pricing-card{background:linear-gradient(160deg,var(--glazier-glass-1),var(--glazier-glass-2));border:1px solid var(--line-dark);border-radius:var(--r-lg);padding:26px;box-shadow:var(--inset-glass);}
+  .pricing-card.featured{border-color:var(--teal-soft);box-shadow:0 0 22px var(--teal-faint),var(--inset-glass);}
+  .pricing-card h3{font-family:var(--font-mono);font-size:12px;letter-spacing:2px;color:var(--ink-on-dark-dim);margin:0 0 10px;}
+  .pricing-card .price{font-size:34px;font-weight:900;letter-spacing:-1px;margin-bottom:16px;}
+  .pricing-card .price span{font-size:13px;font-weight:500;color:var(--ink-on-dark-dim);}
+  .pricing-card ul{list-style:none;padding:0;margin:0 0 20px;display:flex;flex-direction:column;gap:9px;}
+  .pricing-card li{font-size:13px;color:var(--ink-on-dark);padding-left:22px;position:relative;}
+  .pricing-card li::before{content:"✓";position:absolute;left:0;color:var(--teal);font-weight:800;}
+  .cta-btn{width:100%;padding:12px;border-radius:12px;border:none;cursor:pointer;font-family:var(--font-ui);font-size:14px;font-weight:700;background:linear-gradient(135deg,var(--teal-bright),var(--teal));color:#04201d;}
+  .cta-btn.secondary{background:rgba(255,255,255,.05);border:1px solid var(--line-dark);color:var(--ink-on-dark);}
+  .cta-btn:hover{filter:brightness(1.05);}
+
+  .docs-content h3{font-size:18px;font-weight:700;margin:26px 0 10px;}
+  .step{display:flex;gap:14px;margin-bottom:12px;}
+  .step-num{flex-shrink:0;width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--ink-on-metal);
+    border:1px solid var(--line-metal);background:linear-gradient(145deg,var(--metal-hi),var(--metal-3) 70%,var(--metal-1));box-shadow:var(--inset-metal);}
+  .step-body{flex:1;}
+  .step-body p{color:var(--ink-on-dark-dim);font-size:14px;line-height:1.6;margin:0;}
+  .docs-content code{font-family:var(--font-mono);font-size:12.5px;background:rgba(63,224,208,.1);color:var(--teal);padding:2px 6px;border-radius:5px;}
+  .docs-content pre{background:rgba(4,8,14,.6);border:1px solid var(--line-dark);border-radius:10px;padding:14px;overflow:auto;margin:10px 0;}
+  .docs-content pre code{background:none;color:var(--ink-on-dark);padding:0;}
+  .docs-content a{color:var(--teal);}
+  .inline-api-btn{background:linear-gradient(135deg,var(--teal-bright),var(--teal));color:#04201d;border:none;padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:700;font-family:var(--font-ui);margin-top:8px;}
+
+  /* MODAL */
+  .modal-overlay{position:fixed;inset:0;background:rgba(2,4,8,.8);display:flex;align-items:center;justify-content:center;z-index:1000;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);padding:20px;}
+  .modal-overlay.hidden{display:none;}
+  .modal{background:linear-gradient(160deg,#0e1a2b,#0a1320);border:1px solid var(--line-dark);border-radius:18px;padding:28px;max-width:460px;width:100%;max-height:90vh;overflow:auto;box-shadow:var(--shadow-card);}
+  .modal h2{font-size:20px;font-weight:800;margin:0 0 16px;}
+  .settings-section{margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid var(--line-dark);}
+  .settings-section p{font-size:13px;color:var(--ink-on-dark-dim);line-height:1.5;margin:8px 0 12px;}
+  .settings-section a{color:var(--teal);}
+  .modal input{width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--line-dark);background:rgba(4,8,14,.55);color:var(--ink-on-dark);font-family:var(--font-mono);font-size:12.5px;margin-bottom:9px;}
+  .modal input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-faint);}
+  .btn-primary{width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-family:var(--font-ui);font-size:13.5px;font-weight:700;background:linear-gradient(135deg,var(--teal-bright),var(--teal));color:#04201d;}
+  .btn-primary:hover{filter:brightness(1.05);}
+  .btn-ghost{width:100%;padding:10px;border-radius:11px;border:1px solid var(--line-dark);background:none;color:var(--ink-on-dark-dim);cursor:pointer;font-family:var(--font-ui);font-size:13px;margin-top:6px;}
+  .btn-ghost:hover{color:var(--ink-on-dark);border-color:var(--teal-soft);}
+  .free-badge{font-family:var(--font-mono);font-size:11px;color:var(--amber);}
+  .key-hint{font-family:var(--font-mono);font-size:10px;color:var(--ink-on-dark-dim);text-align:center;margin-top:12px;}
+
+  /* Handoff.md slide-out */
+  .handoff-trigger{position:absolute;left:16px;top:16px;z-index:6;cursor:pointer;font-family:var(--font-mono);font-size:11px;font-weight:700;padding:7px 11px;border-radius:9px;color:var(--ink-on-metal);border:1px solid var(--line-metal);background:linear-gradient(176deg,rgba(255,255,255,.6) 0%,rgba(255,255,255,0) 12%),linear-gradient(145deg,var(--metal-hi),var(--metal-2) 45%,var(--metal-4) 80%,var(--metal-1));box-shadow:var(--inset-metal),0 6px 16px rgba(0,0,0,.35);transition:filter var(--t-fast) var(--ease);}
+  .handoff-trigger:hover{filter:brightness(1.05);}
+  .handoff-overlay{position:absolute;inset:0;z-index:5;background:rgba(0,0,0,.3);display:none;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);}
+  .handoff-overlay.open{display:block;}
+  .handoff-panel{position:absolute;bottom:0;left:50%;width:320px;max-height:70%;z-index:7;background:rgba(10,14,18,.97);border:1px solid var(--line-dark);border-radius:var(--r-lg) var(--r-lg) 0 0;box-shadow:var(--shadow-card);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);display:none;flex-direction:column;transform:translateX(calc(-50% + 100%));transition:transform .35s var(--ease);}
+  .handoff-panel.open{display:flex;transform:translateX(-50%);}
+  .handoff-panel-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px;border-bottom:1px solid var(--line-dark);}
+  .handoff-panel-title{font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:.5px;color:var(--ink-on-dark);}
+  .handoff-close{background:none;border:none;color:var(--ink-on-dark-dim);font-size:20px;cursor:pointer;line-height:1;padding:0 4px;}
+  .handoff-close:hover{color:var(--ink-on-dark);}
+  .handoff-panel-body{padding:14px 16px 18px;overflow:auto;}
+  .handoff-desc{font-size:13px;line-height:1.5;color:var(--ink-on-dark-dim);margin:0 0 16px;}
+  .stack-select-group{margin-bottom:16px;}
+  .stack-label{display:block;font-family:var(--font-mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-on-dark-dim);margin-bottom:6px;}
+  .stack-select{position:relative;}
+  .stack-current{display:flex;align-items:center;justify-content:space-between;width:100%;padding:10px 13px;border-radius:8px;border:1px solid var(--line-dark);background:rgba(255,255,255,.04);color:var(--ink-on-dark);font-family:var(--font-mono);font-size:12.5px;cursor:pointer;transition:border-color var(--t-fast) var(--ease);}
+  .stack-current:hover{border-color:var(--teal-soft);}
+  .stack-options{display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:10;padding:5px;background:rgba(10,14,18,.97);border:1px solid var(--line-dark);border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.55);flex-direction:column;gap:2px;}
+  .stack-options.open{display:flex;}
+  .stack-opt{background:none;border:none;color:var(--ink-on-dark-dim);text-align:left;padding:7px 10px;border-radius:6px;cursor:pointer;font-family:var(--font-mono);font-size:11px;transition:all var(--t-fast) var(--ease);}
+  .stack-opt:hover{background:rgba(63,224,208,.12);color:var(--teal);}
+  .stack-opt.active{color:var(--teal);font-weight:700;}
+  .handoff-gen-btn{width:100%;padding:12px;border-radius:10px;border:none;cursor:pointer;font-family:var(--font-ui);font-size:13px;font-weight:700;background:linear-gradient(135deg,var(--teal-bright),var(--teal));color:#04201d;transition:all var(--t-base) var(--ease);}
+  .handoff-gen-btn:hover{filter:brightness(1.06);transform:translateY(-1px);}
+
+  @media(max-width:820px){.container{flex-direction:column;}.panel-chat{width:100%;height:auto;max-height:42vh;}}
+  </style>
+<style>
+.ha-img-placeholder{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;background:#f4f4f5;border:1px dashed #d4d4d8;border-radius:8px;color:#71717a;font-size:12px;font-family:system-ui,sans-serif;min-height:80px;padding:16px;box-sizing:border-box;animation:ha-img-pulse 1.5s ease-in-out infinite}
+.ha-img-placeholder.ha-failed{animation:none;opacity:.7}
+@keyframes ha-img-pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@media(prefers-color-scheme:dark){.ha-img-placeholder{background:#27272a;border-color:#3f3f46;color:#a1a1aa}}
+</style>
+</head>
+<body class="glz-body"><script>
+(function(){
+  const hasAuth = localStorage.getItem('webhooks_email_api_key') || new URLSearchParams(location.search).get('auth');
+  if (!hasAuth) {
+    location.href = '/signin' + (location.pathname !== '/studio' ? '?redirect=' + encodeURIComponent(location.href) : '');
+  }
+})();
+</script>
+
+  <div class="bg"></div>
+  <div class="app-root">
+
+    <header>
+      <div class="brand">
+        <span class="badge glz-surface-metal"><span class="glz-node-dot"></span></span>
+        <h1>LogicLemon<span>AI</span></h1>
+        <nav>
+          <button class="active" data-view="app">Studio</button>
+          <button data-view="library">Library</button>
+          <button data-view="pricing">Pricing</button>
+          <button data-view="docs">Docs</button>
+        </nav>
+      </div>
+      <div class="status"><span class="dot" id="statusDot"></span> <span id="statusText">Ready</span></div>
+      <span class="signed-in-pill" id="signedInPill" title="You're signed in">&#10003; Connected</span>
+      <button class="settings-btn" id="configBtn" title="Settings &amp; API key" style="font-size:15px;padding:6px 9px;">&#9881;</button>
+      <div class="preview-pod pod-down hdr-export" id="exportPod">
+        <button class="pod-trigger" id="exportTrigger" type="button" aria-haspopup="true" aria-expanded="false" title="Export"><span>Export</span><span class="pod-caret" aria-hidden="true">&#9662;</span></button>
+        <div class="pod-menu" id="exportMenu" role="menu">
+          <button class="pod-item" type="button" role="menuitem" data-action="download">↓ Download HTML</button>
+          <button class="pod-item" type="button" role="menuitem" data-action="copy">⎘ Copy HTML</button>
+          <button class="pod-item" type="button" role="menuitem" data-action="desktop">⇄ Send to Desktop</button>
+        </div>
+      </div>
+      <div class="preview-pod pod-down hdr-export" id="sharePod">
+        <button class="pod-trigger" id="shareTrigger" type="button" aria-haspopup="true" aria-expanded="false" title="Share"><span>Share</span><span class="pod-caret" aria-hidden="true">&#9662;</span></button>
+        <div class="pod-menu" id="shareMenu" role="menu">
+          <button class="pod-item" type="button" role="menuitem" data-action="handoff">📋 Backend Handoff.md</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ===== STUDIO (APP) ===== -->
+    <div class="view active" id="view-app">
+      <div class="container">
+        <div class="panel-chat glz-surface-metal">
+          <div class="messages" id="messages">
+            <div class="msg assistant">Describe the UI you want — I'll generate it live on the right.</div>
+          </div>
+          <div class="input-area">
+            <textarea id="promptInput" rows="1" placeholder="Describe your UI… (e.g. 'a dark dashboard with a sidebar and a chart')" enterkeyhint="send"></textarea>
+            <button id="sendBtn" title="Send"><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
+          </div>
+        </div>
+        <div class="panel-preview glz-surface-glass">
+          <div class="toolbar">
+            <span class="section-tag">Preview</span>
+            <button class="toolbar-btn api-btn" id="appApiBtn">API</button>
+            <button id="sendDesktopBtn" class="toolbar-btn" style="display:none;">Desktop</button>
+            <button id="webhookerBtn" class="toolbar-btn" style="display:none;">Webhook</button>
+            <span id="modelSelector" class="model-selector" style="display:none"></span>
+            <button class="clear-btn" id="clearPreviewBtn">Clear</button>
+          </div>
+          <div class="preview-canvas" id="previewCanvas">
+            <div class="preview-stage" id="previewStage">
+              <iframe id="preview" sandbox="allow-scripts allow-same-origin" title="Live Preview"></iframe>
+            </div>
+          </div>
+          <div class="preview-controls">
+            <div class="preview-pod" id="devicePod">
+              <button class="pod-trigger" id="deviceTrigger" type="button" aria-haspopup="true" aria-expanded="false" title="Device"><span id="deviceLabel">Laptop</span><span class="pod-caret" aria-hidden="true">&#9652;</span></button>
+              <div class="pod-menu" id="deviceMenu" role="menu">
+                <button class="pod-item" type="button" role="menuitem" data-device="mobile" data-w="390" data-h="800">Mobile</button>
+                <button class="pod-item" type="button" role="menuitem" data-device="tablet" data-w="820" data-h="1180">Tablet</button>
+                <button class="pod-item active" type="button" role="menuitem" data-device="laptop" data-w="1280" data-h="900">Laptop</button>
+                <button class="pod-item" type="button" role="menuitem" data-device="desktop" data-w="1440" data-h="960">Desktop</button>
+              </div>
+            </div>
+            <div class="preview-zoom" id="previewZoom">
+              <button class="zoom-step" id="zoomOutBtn" type="button" aria-label="Zoom out">&minus;</button>
+              <button class="zoom-val" id="zoomValue" type="button" title="Fit to width" aria-label="Fit to width">100%</button>
+              <button class="zoom-step" id="zoomInBtn" type="button" aria-label="Zoom in">+</button>
+          </div>
+          <!-- Handoff.md silver trigger + slide-out panel -->
+          <button class="handoff-trigger" id="handoffTrigger" type="button" title="Generate Backend Handoff">Handoff.md</button>
+          <div class="handoff-overlay" id="handoffOverlay"></div>
+          <div class="handoff-panel" id="handoffPanel">
+            <div class="handoff-panel-header">
+              <span class="handoff-panel-title">Backend Handoff.md</span>
+              <button class="handoff-close" id="handoffClose" type="button" aria-label="Close">&times;</button>
+            </div>
+            <div class="handoff-panel-body">
+              <p class="handoff-desc">Generate a portable backend-handoff specification from the current UI.</p>
+              <div class="stack-select-group">
+                <label class="stack-label">Target stack</label>
+                <div class="stack-select" id="stackSelect">
+                  <button class="stack-current" id="stackCurrent" type="button">Agnostic <span class="pod-caret">&#9662;</span></button>
+                  <div class="stack-options" id="stackOptions">
+                    <button class="stack-opt active" data-stack="agnostic">Agnostic</button>
+                    <button class="stack-opt" data-stack="cloudflare">Cloudflare</button>
+                    <button class="stack-opt" data-stack="node-express">Node-Express</button>
+                    <button class="stack-opt" data-stack="supabase">Supabase</button>
+                    <button class="stack-opt" data-stack="fastapi">FastAPI</button>
+                    <button class="stack-opt" data-stack="nextjs">Next.js</button>
+                    <button class="stack-opt" data-stack="firebase">Firebase</button>
+                    <button class="stack-opt" data-stack="django">Django</button>
+                    <button class="stack-opt" data-stack="rails">Rails</button>
+                  </div>
+                </div>
+              </div>
+              <button class="handoff-gen-btn" id="handoffGenBtn" type="button">Generate Handoff.md</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== LIBRARY ===== -->
+    <div class="view" id="view-library">
+      <div class="page">
+        <span class="section-tag">SKILL_MODULE</span>
+        <h2>Skills Library</h2>
+        <p class="subtitle">Browse skills, templates, and design packages. Apply any skill to kickstart your next UI.</p>
+        <input class="search-bar" id="librarySearch" placeholder="Search skills, templates, designs…" />
+        <div class="category-filters" id="categoryFilters"></div>
+        <div class="skill-grid" id="skillGrid"></div>
+      </div>
+    </div>
+
+    <!-- ===== PRICING ===== -->
+    <div class="view" id="view-pricing">
+      <div class="page">
+        <span class="section-tag">PLANS</span>
+        <h2>Simple, transparent pricing</h2>
+        <p class="subtitle">Start free. Pay only when you need persistence, sync, and the full library.</p>
+        <div class="pricing-grid">
+          <div class="pricing-card">
+            <h3>FREE</h3><div class="price">$0<span>/mo</span></div>
+            <ul><li>Text-to-UI generation</li><li>Sandboxed live preview</li><li>Skills Library (basic)</li><li>3 free generations/day</li></ul>
+            <button class="cta-btn secondary" id="pricingFreeBtn">Try Free</button>
+          </div>
+          <div class="pricing-card featured">
+            <h3>CREDITS</h3><div class="price">$5<span> — 10 credits</span></div>
+            <ul><li>Full SkillChain generation</li><li>Backend blueprint export</li><li>Desktop sync (Send to IDE)</li><li>Webhook ingress</li><li>7 edge models</li></ul>
+            <button class="cta-btn" id="pricingSmallBtn">Buy Credits</button>
+          </div>
+          <div class="pricing-card">
+            <h3>PRO</h3><div class="price">$12<span>/mo</span></div>
+            <ul><li>100 credits/month</li><li>Everything in Credits</li><li>Unlimited webhook ingress</li><li>Priority routing</li><li>API access</li></ul>
+            <button class="cta-btn secondary" id="pricingProBtn">Subscribe</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== DOCS ===== -->
+    <div class="view" id="view-docs">
+      <div class="page docs-content">
+        <span class="section-tag">DOCS</span>
+        <h2>Quickstart</h2>
+        <p class="subtitle">Zero to your first live UI in under a minute.</p>
+        <h3>0. Configure your API key</h3>
+        <div class="step"><div class="step-num">0</div><div class="step-body"><p>Get a free <strong>OpenRouter key</strong> at <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer">openrouter.ai/keys</a>, then add it:</p><button class="inline-api-btn" id="docsApiBtn">Open API Settings</button></div></div>
+        <h3>1. Generate your first UI</h3>
+        <div class="step"><div class="step-num">1</div><div class="step-body"><p>On the <strong>Studio</strong> tab, type a prompt like <code>a dark dashboard with a sidebar and a chart</code> and press Enter.</p></div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-body"><p>Watch it render live. Switch device with the pod, zoom, then <strong>Export</strong> the HTML or the backend handoff.</p></div></div>
+        <h3>2. Sync to desktop</h3>
+        <div class="step"><div class="step-num">3</div><div class="step-body"><p>Run <code>node receiver.js</code> on your laptop, set the desktop IP in Settings, then <strong>Send to Desktop</strong>.</p></div></div>
+        <h3>3. Webhook ingress</h3>
+        <pre><code>POST /api/webhook
+{ "prompt": "a landing page with a hero", "session": "my-session" }</code></pre>
+        <p>The Worker processes it, broadcasts via SSE, and the studio renders it live.</p>
+      </div>
+    </div>
+
+    <!-- ===== SETTINGS MODAL ===== -->
+    <div class="modal-overlay hidden" id="keyModal">
+      <div class="modal">
+        <h2>Settings</h2>
+        <div class="settings-section">
+          <span class="section-tag">QUICK START</span>
+          <p>New here? Generate UIs free — no key needed. <span class="free-badge" id="freeCountHint"></span></p>
+          <button class="btn-primary" id="tryFreeBtn">&#10024; Try it free</button>
+        </div>
+        <div class="settings-section">
+          <span class="section-tag">API KEY</span>
+          <p>Add your own <strong>OpenRouter key</strong> (free at <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer">openrouter.ai/keys</a>) or a <strong>DipDesigns key</strong>.</p>
+          <input type="password" id="keyInput" placeholder="sk-or-v1-…" spellcheck="false" autocomplete="off" />
+          <div id="keyFeedback"></div>
+          <button class="btn-primary" id="keyValidateBtn">Validate &amp; Save</button>
+        </div>
+        <div class="settings-section">
+          <span class="section-tag">DEVICE SYNC · OPTIONAL</span>
+          <p>Connect your Worker + desktop so builds sync and land in your IDE.</p>
+          <input type="text" id="backendUrlInput" placeholder="Backend URL (https://… optional)" spellcheck="false" autocomplete="off" />
+          <input type="text" id="workerUrlInput" placeholder="Worker URL (https://…) for cross-device sync" spellcheck="false" autocomplete="off" />
+          <input type="text" id="desktopIpInput" placeholder="Desktop IP (e.g. 192.168.1.42)" spellcheck="false" autocomplete="off" />
+          <input type="password" id="desktopKeyInput" placeholder="Desktop key (printed by receiver.js)" spellcheck="false" autocomplete="off" />
+          <button class="btn-primary" id="saveConnBtn">Save connections</button>
+          <div id="connFeedback"></div>
+        </div>
+        <div class="settings-section" id="creditsSection">
+          <span class="section-tag">CREDITS &amp; PLAN</span>
+          <p id="creditStatus">Loading your balance…</p>
+          <div id="creditActions" style="display:none">
+            <button class="btn-primary" id="buyTestBtn" style="margin-bottom:8px;font-size:12px;">Test $2 — 3 credits</button>
+            <button class="btn-primary" id="buySmallBtn" style="margin-bottom:8px;">Buy 10 credits</button>
+            <button class="btn-primary" id="buyLargeBtn" style="margin-bottom:8px;">Buy 50 credits</button>
+            <button class="btn-ghost" id="subProBtn">Subscribe Pro — monthly</button>
+          </div>
+          <div id="creditFeedback"></div>
+        </div>
+        <button class="btn-ghost" id="keySkipBtn">Close</button>
+        <div class="key-hint">Everything stays on this device. Never shared.</div>
+      </div>
+    </div>
+
+  </div>
+  <script src="client.js"></script>
+<script>
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && window.parent !== window) {
+    window.parent.postMessage({ type: 'close-fullscreen' }, '*');
+  }
+});
+</script>
+<!-- Inline: Share pod + Handoff.md slide-out -->
+<script>
+(function(){
+  var sharePod = document.getElementById('sharePod');
+  var shareTrigger = document.getElementById('shareTrigger');
+  var shareMenu = document.getElementById('shareMenu');
+  var handoffTrigger = document.getElementById('handoffTrigger');
+  var handoffPanel = document.getElementById('handoffPanel');
+  var handoffOverlay = document.getElementById('handoffOverlay');
+  var handoffClose = document.getElementById('handoffClose');
+  var stackCurrent = document.getElementById('stackCurrent');
+  var stackOptions = document.getElementById('stackOptions');
+  var handoffGenBtn = document.getElementById('handoffGenBtn');
+
+  function closeSharePod(){ if(sharePod) sharePod.classList.remove('open'); }
+  function closeHandoffPanel(){ if(handoffPanel) handoffPanel.classList.remove('open'); if(handoffOverlay) handoffOverlay.classList.remove('open'); }
+  function openHandoffPanel(){ if(handoffPanel) handoffPanel.classList.add('open'); if(handoffOverlay) handoffOverlay.classList.add('open'); closeSharePod(); }
+
+  if(shareTrigger) shareTrigger.addEventListener('click', function(e){ e.stopPropagation(); sharePod.classList.toggle('open'); });
+  document.addEventListener('click', function(e){ if(sharePod && !sharePod.contains(e.target)) closeSharePod(); });
+  if(handoffTrigger) handoffTrigger.addEventListener('click', function(e){ e.stopPropagation(); openHandoffPanel(); });
+  if(handoffOverlay) handoffOverlay.addEventListener('click', closeHandoffPanel);
+  if(handoffClose) handoffClose.addEventListener('click', closeHandoffPanel);
+  if(stackCurrent) stackCurrent.addEventListener('click', function(e){ e.stopPropagation(); stackOptions.classList.toggle('open'); });
+  document.addEventListener('click', function(e){ if(stackOptions && !stackOptions.contains(e.target)) stackOptions.classList.remove('open'); });
+  if(stackOptions) stackOptions.addEventListener('click', function(e){
+    var opt = e.target.closest('.stack-opt');
+    if(!opt) return;
+    stackOptions.querySelectorAll('.stack-opt').forEach(function(o){ o.classList.remove('active'); });
+    opt.classList.add('active');
+    stackCurrent.innerHTML = opt.textContent + ' <span class="pod-caret">&#9662;</span>';
+    stackOptions.classList.remove('open');
+  });
+  if(handoffGenBtn) handoffGenBtn.addEventListener('click', function(){
+    var api = window.DipDesigns;
+    if(!api){ alert('Studio not ready. Try again.'); return; }
+    var result = api.getLastResult();
+    if(!result){ alert('Nothing to export — generate a UI first.'); return; }
+    var stack = (stackOptions ? stackOptions.querySelector('.stack-opt.active') : null);
+    var stackName = stack ? stack.getAttribute('data-stack') : 'agnostic';
+    var stackLabel = stack ? stack.textContent : 'Agnostic';
+    var htmlLen = (result.html || '').length;
+    var cssLen = (result.css || '').length;
+    var jsLen = (result.js || '').length;
+    var totalLen = htmlLen + cssLen + jsLen;
+    var now = new Date().toISOString().slice(0,19).replace('T',' ');
+    var md = '# Implementation Handoff\\n\\n';
+    md += '> Auto-generated by DipDesigns Studio \\u00B7 ' + now + '\\n';
+    md += '> Target stack: **' + stackLabel + '**\\n\\n';
+    md += '## Source Prompt\\n\\n';
+    md += '\`\`\`\\n' + (window.lastPrompt || '(not recorded)') + '\\n\`\`\`\\n\\n';
+    md += '## Generated Output Summary\\n\\n';
+    md += '| Component | Size |\\n|-----------|------|\\n';
+    md += '| HTML | ' + htmlLen + ' chars |\\n| CSS | ' + cssLen + ' chars |\\n| JS | ' + jsLen + ' chars |\\n| **Total** | **' + totalLen + ' chars** |\\n\\n';
+    md += '## Target Stack\\n\\n';
+    md += '- **Stack**: ' + stackLabel + '\\n';
+    md += '- **Provider**: ' + (stackName === 'agnostic' ? 'Any' : stackLabel) + '\\n\\n';
+    md += '## Architecture\\n\\n';
+    md += '- **Rendering**: Client-side blob URL \\u2192 sandboxed iframe\\n';
+    md += '- **Framework**: Glazier Kit design system (tokens.css + glazier.css)\\n';
+    md += '- **Export**: Self-contained HTML with inline CSS/JS\\n\\n';
+    md += '## Integration Instructions\\n\\n';
+    md += '### Standalone HTML file\\n\\n';
+    md += 'Save the downloaded HTML file as-is.\\n\\n';
+    md += '\`\`\`bash\\npython3 -m http.server 8080\\n\`\`\`\\n\\n';
+    md += '### Extract into a project\\n\\n';
+    md += '\`\`\`\\nproject/\\n\\u2514\\u2500\\u2500 index.html    # HTML block\\n\\u2514\\u2500\\u2500 styles.css    # CSS block\\n\\u2514\\u2500\\u2500 app.js        # JS block\\n\`\`\`\\n\\n';
+    md += '---\\n\\n## Generated HTML\\n\\n\`\`\`html\\n' + (result.html || '') + '\\n\`\`\`\\n\\n';
+    md += '## Generated CSS\\n\\n\`\`\`css\\n' + (result.css || '') + '\\n\`\`\`\\n\\n';
+    md += '## Generated JS\\n\\n\`\`\`javascript\\n' + (result.js || '') + '\\n\`\`\`\\n\\n';
+    md += '---\\n\\n*Generated by [DipDesigns Studio](https://dipdesigns.app)*\\n';
+    var blob = new Blob([md], {type:'text/markdown'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'HANDOFF-' + Date.now() + '.md';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 5000);
+    closeHandoffPanel();
+    var toast = document.querySelector('.copy-toast');
+    if(toast){ toast.textContent = 'Handoff.md downloaded'; toast.classList.add('show'); clearTimeout(toast._timer); toast._timer = setTimeout(function(){ toast.classList.remove('show'); }, 2000); }
+    else alert('Handoff.md downloaded');
+  });
+  /* Share pod handoff button — uses same logic but with the selected stack (or defaults to agnostic) */
+  if(shareMenu) shareMenu.addEventListener('click', function(e){
+    var btn = e.target.closest('.pod-item[data-action="handoff"]');
+    if(!btn) return;
+    e.stopPropagation();
+    closeSharePod();
+    /* Get current stack selection or default */
+    var activeStack = stackOptions ? stackOptions.querySelector('.stack-opt.active') : null;
+    if(activeStack) stackCurrent.innerHTML = activeStack.textContent + ' <span class="pod-caret">&#9662;</span>';
+    handoffGenBtn.click();
+  });
+})();
+</script>
+<!-- broken-img-handler -->
+<script>
+(function(){
+  if(window.__brokenImgHandler)return;
+  window.__brokenImgHandler=true;
+  var MAX=5,DELAYS=[2000,4000,8000,16000,32000];
+  document.addEventListener('error',function(e){
+    var img=e.target;
+    if(!img||img.tagName!=='IMG')return;
+    var liveSrc=img.getAttribute('src');
+    var src=img.dataset.haOriginalSrc||liveSrc;
+    if(!src)return;
+    if(img.dataset.haOriginalSrc&&liveSrc&&liveSrc!==img.dataset.haOriginalSrc&&liveSrc.indexOf('_r=')<0){src=liveSrc;img.dataset.haOriginalSrc=src;img.dataset.haRetryCount='0'}
+    else if(!img.dataset.haOriginalSrc){img.dataset.haOriginalSrc=src}
+    var attempt=parseInt(img.dataset.haRetryCount||'0',10);
+    if(img.dataset.haPhId){var old=document.getElementById(img.dataset.haPhId);if(old)old.remove()}
+    var ph=document.createElement('div');
+    ph.className='ha-img-placeholder'+(attempt>=MAX?' ha-failed':'');
+    ph.id='ha-ph-'+Math.random().toString(36).slice(2,9);
+    var w=img.getAttribute('width');var h=img.getAttribute('height');
+    if(w)ph.style.width=w+(isNaN(Number(w))?'':'px');
+    else if(img.style.width)ph.style.width=img.style.width;
+    else if(img.width>1)ph.style.width=img.width+'px';
+    if(h)ph.style.height=h+(isNaN(Number(h))?'':'px');
+    else if(img.style.height)ph.style.height=img.style.height;
+    else if(img.height>1)ph.style.height=img.height+'px';
+    ph.textContent=attempt>=MAX?'Image unavailable':'Loading image\\u2026';
+    img.dataset.haPhId=ph.id;
+    if(img.dataset.haOrigDisplay==null)img.dataset.haOrigDisplay=img.style.display||'';
+    img.style.display='none';
+    img.insertAdjacentElement('afterend',ph);
+    if(attempt<MAX){
+      img.dataset.haRetryCount=String(attempt+1);
+      setTimeout(function(){
+        if(!img.isConnected)return;
+        if(img.dataset.haOriginalSrc!==src)return;
+        if(img.complete&&img.naturalWidth>0)return;
+        var curSrc=img.getAttribute('src');
+        if(curSrc&&curSrc.indexOf(src)!==0)return;
+        var fresh=src+(src.indexOf('?')>=0?'&':'?')+'_r='+(attempt+1)+'_'+Date.now();
+        img.src=fresh;
+      },DELAYS[attempt]);
+    }
+  },true);
+  document.addEventListener('load',function(e){
+    var img=e.target;
+    if(!img||img.tagName!=='IMG')return;
+    if(img.dataset.haPhId){
+      var ph=document.getElementById(img.dataset.haPhId);
+      if(ph)ph.remove();
+      delete img.dataset.haPhId;
+      img.style.display=img.dataset.haOrigDisplay||'';
+      delete img.dataset.haOrigDisplay;
+      delete img.dataset.haOriginalSrc;
+      delete img.dataset.haRetryCount;
+    }
+  },true);
+})();
+</script>
+</body>
+</html>
+`,
+};
+
+ASSETS["signup.html"] = {
+  contentType: "text/html",
+  content: `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Access Node — DipDesigns</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="glazier.css">
+
+  <!-- ===== PAGE (layout only) ===== -->
+  <style>
+  body{overflow-x:hidden;}
+  .bg{position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:radial-gradient(1000px 600px at 50% -10%,rgba(63,224,208,.10),transparent 60%),
+    radial-gradient(760px 680px at 88% 6%,rgba(246,169,59,.06),transparent 58%),
+    radial-gradient(820px 720px at 10% 110%,rgba(36,75,110,.28),transparent 60%),
+    linear-gradient(180deg,var(--bg-base),var(--bg-void));}
+  .bg::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(120,170,210,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(120,170,210,.045) 1px,transparent 1px);background-size:46px 46px;-webkit-mask-image:radial-gradient(circle at 50% 40%,#000 22%,transparent 76%);mask-image:radial-gradient(circle at 50% 40%,#000 22%,transparent 76%);}
+  .auth-wrap{position:relative;z-index:2;min-height:100vh;display:grid;place-items:center;padding:24px;}
+  .stack{width:100%;max-width:418px;}
+  .node{padding:11px;border-radius:26px;}
+  .screen{background:linear-gradient(165deg,#0c1420,#070b12);border:1px solid rgba(0,0,0,.5);border-radius:18px;box-shadow:inset 0 2px 16px rgba(0,0,0,.6);padding:26px 26px 24px;color:var(--ink-on-dark);}
+  .node-bar{display:flex;align-items:center;gap:10px;margin-bottom:22px;}
+  .node-bar .ttl{font-family:var(--font-mono);font-weight:700;letter-spacing:2px;font-size:12px;color:var(--ink-on-dark);}
+  .node-bar .meta{margin-left:auto;font-family:var(--font-mono);font-size:10px;letter-spacing:1px;color:var(--amber);display:inline-flex;align-items:center;gap:6px;}
+  .node-bar .meta i{width:5px;height:5px;border-radius:50%;background:var(--amber);box-shadow:0 0 8px var(--amber-soft);}
+  h1{font-size:23px;font-weight:800;margin:0 0 6px;letter-spacing:-.4px;
+     color:var(--amber);
+     background:linear-gradient(120deg,var(--ember),var(--amber));
+     -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+  .sub{color:var(--ink-on-dark-dim);font-size:13px;line-height:1.55;margin:0 0 22px;}
+  .glz-btn + .glz-btn{margin-top:10px;}
+  .glz-divider{margin:20px 0 14px;}
+  .email-row{display:flex;gap:8px;}
+  .email-row .glz-field{flex:1;}
+  .email-row .glz-btn{flex-shrink:0;padding:13px 14px;font-size:12px;}
+  .soon{font-family:var(--font-mono);font-size:10px;color:var(--ink-on-dark-dim);margin:8px 0 0;text-align:center;letter-spacing:.5px;}
+  .security{display:flex;gap:8px;align-items:flex-start;margin:22px 0 0;font-size:11px;line-height:1.5;color:var(--ink-on-dark-dim);font-family:var(--font-mono);}
+  .security svg{width:14px;height:14px;flex-shrink:0;margin-top:1px;color:var(--amber);}
+  .cap{text-align:center;font-family:var(--font-mono);font-size:11px;color:var(--ink-on-dark-dim);margin:18px 0 0;}
+  .cap b{color:var(--teal);font-weight:400;}
+  </style>
+</head>
+<body class="glz-body">
+  <div class="bg"></div>
+  <svg class="glz-electric-line" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true" style="z-index:1;">
+    <path d="M-40,230 C 320,150 540,360 760,300 S 1180,180 1500,260"/>
+    <path class="glz-slow" d="M-40,700 C 360,780 560,520 780,610 S 1180,760 1500,650"/>
+  </svg>
+
+  <main class="auth-wrap">
+    <div class="stack">
+      <section class="node glz-surface-metal" aria-label="Sign in">
+        <div class="screen">
+          <div class="node-bar">
+            <span class="glz-node-dot" aria-hidden="true"></span>
+            <span class="ttl">ACCESS NODE</span>
+            <span class="meta"><i></i>SECURE · OAUTH</span>
+          </div>
+
+          <h1>Create your account</h1>
+          <p class="sub">Join the beta — get early access to AI-generated UI components..</p>
+
+          <button class="glz-btn glz-btn-primary glz-btn-block" id="gh">
+            <svg viewBox="0 0 24 24" fill="#04201d"><path d="M12 .5a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.3-1.8-1.3-1.8-1.1-.7 0-.7 0-.7 1.2 0 1.9 1.2 1.9 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2 0-.4-.5-1.6.2-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.7 1.6.2 2.8.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .5Z"/></svg>
+            Continue with GitHub
+          </button>
+          <button class="glz-btn glz-btn-block" id="go">
+            <svg viewBox="0 0 24 24"><path fill="#EA4335" d="M12 11v3.8h5.3c-.2 1.4-1.6 4-5.3 4a5.8 5.8 0 0 1 0-11.6c1.8 0 3 .8 3.7 1.4l2.5-2.4A9 9 0 1 0 12 21c5.2 0 8.6-3.6 8.6-8.7 0-.6 0-1-.2-1.3H12Z"/></svg>
+            Continue with Google
+          </button>
+
+          <div class="glz-divider">Sign in with your account</div>
+          <div class="email-row">
+            <input class="glz-field" id="email" type="email" placeholder="you@studio.dev" autocomplete="email" spellcheck="false">
+            <button class="glz-btn glz-btn-metal" id="notify">Sign In</button>
+          </div>
+          <p class="soon" id="notifyMsg">Enter your email to sign in or sign up.</p>
+
+          <p class="security">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+            Your email is never shared or exposed. OAuth tokens are scoped read-only — exactly enough to identify you and protect your routing addresses.
+          </p>
+        </div>
+      </section>
+      <p class="cap">Backed by <b>GitHub</b> &amp; <b>Google</b> OAuth · part of DipDesigns</p>
+    </div>
+  </main>
+
+  <script>
+    function workerBase(){ return (localStorage.getItem('webhooks_email_worker') || window.location.origin).replace(/\\/+$/, ''); }
+    function startOAuth(p){ window.location.href = workerBase() + '/api/auth/' + p + '?redirect=' + encodeURIComponent('/'); }
+    document.getElementById('gh').onclick = function(){ startOAuth('github'); };
+    document.getElementById('go').onclick = function(){ startOAuth('google'); };
+    document.getElementById('notify').onclick = function(){
+      var e = document.getElementById('email').value.trim();
+      var msg = document.getElementById('notifyMsg');
+      if (e && /.+@.+\\..+/.test(e)) { msg.textContent = '\\u2713 Check your email for a sign-in link.'; msg.style.color = 'var(--teal)'; }
+      else { msg.textContent = 'Enter a valid email to join the magic-link waitlist.'; msg.style.color = 'var(--amber)'; }
+    };
+  
+    // Store email for beta list before OAuth redirect
+    async function storeEmailForBeta(email) {
+      try {
+        await fetch('/api/beta-signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, source: 'signup_page', timestamp: Date.now() })
+        });
+      } catch (e) { console.log('Beta email stored locally'); }
+    }
+</script>
+</body>
+</html>
+`,
+};
+
 ASSETS["client.js"] = {
-  contentType: "application/javascript",
+  contentType: "text/javascript",
   content: `(function () {
   const MODELS = [
     { id: 'google/gemma-4-26b-a4b-it:free', name: 'Gemma 4 (26B)', desc: 'Fast, default' },
@@ -1925,183 +3207,6 @@ ASSETS["dashboard.html"] = {
 `,
 };
 
-ASSETS["glazier.css"] = {
-  contentType: "text/css",
-  content: `/* ============================================================================
-   GLAZIER KIT · glazier.css   (v2 — hardened)
-   Hard aesthetics crafted ONCE as classes. Depends only on tokens.css.
-   v2 changes:
-     • EVERY class is namespaced \`glz-\` → cannot collide with the existing
-       copper/patina stylesheet (resolves the .btn / pseudo-element concerns).
-     • color-mix() removed → uses pre-alpha'd --glazier-glass-* tokens.
-     • .glz-btn defaults to width:auto; use .glz-btn-block for full-width.
-   Apply these classes to NEW markup only — never bolt onto already-themed
-   elements (keeps ::before/::after exclusively ours).
-   ============================================================================ */
-
-*, *::before, *::after { box-sizing: border-box; }
-
-.glz-body {
-  margin: 0;
-  font-family: var(--font-ui);
-  color: var(--ink-on-dark);
-  background: var(--bg-void);
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-}
-
-/* ---- CANVAS ---- */
-.glz-canvas {
-  position: relative;
-  min-height: 100vh;
-  background:
-    radial-gradient(1100px 600px at 50% -10%, rgba(63, 224, 208, 0.10), transparent 60%),
-    radial-gradient(900px 700px at 85% 110%, rgba(36, 75, 110, 0.30), transparent 60%),
-    linear-gradient(180deg, var(--bg-base), var(--bg-void));
-  overflow: hidden;
-}
-.glz-canvas::before {
-  content: "";
-  position: absolute; inset: 0;
-  background-image:
-    linear-gradient(rgba(120, 170, 210, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(120, 170, 210, 0.05) 1px, transparent 1px);
-  background-size: 44px 44px;
-  -webkit-mask-image: radial-gradient(circle at 50% 40%, #000 30%, transparent 78%);
-  mask-image: radial-gradient(circle at 50% 40%, #000 30%, transparent 78%);
-  pointer-events: none;
-}
-
-/* ---- SURFACE: GLASS (no color-mix) ---- */
-.glz-surface-glass {
-  position: relative;
-  background: linear-gradient(160deg, var(--glazier-glass-1), var(--glazier-glass-2));
-  -webkit-backdrop-filter: var(--blur-glass);
-  backdrop-filter: var(--blur-glass);
-  border: 1px solid var(--line-dark);
-  border-radius: var(--r-lg);
-  box-shadow: var(--inset-glass), var(--shadow-card);
-}
-.glz-surface-glass::after {
-  content: "";
-  position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-  background: linear-gradient(180deg, rgba(140, 200, 230, 0.10), transparent 22%);
-}
-
-/* ---- SURFACE: METAL (brushed silver) ---- */
-.glz-surface-metal {
-  position: relative;
-  color: var(--ink-on-metal);
-  background:
-    linear-gradient(176deg, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0) 12%),
-    repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0 1px, rgba(0,0,0,0.04) 1px 3px),
-    linear-gradient(145deg, var(--metal-hi) 0%, var(--metal-1) 16%, var(--metal-3) 40%,
-      var(--metal-2) 58%, var(--metal-4) 80%, var(--metal-1) 100%);
-  border: 1px solid var(--line-metal);
-  border-radius: var(--r-lg);
-  box-shadow: var(--inset-metal), var(--shadow-raise);
-}
-.glz-surface-metal::before {
-  content: "";
-  position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-  opacity: 0.10; mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
-/* ---- ACCENT: TEAL ---- */
-.glz-glow-teal {
-  box-shadow: 0 0 0 1px var(--teal-soft), 0 0 18px rgba(63, 224, 208, 0.30), var(--shadow-raise);
-}
-.glz-text-teal { color: var(--teal); }
-.glz-text-amber { color: var(--amber); }
-.glz-glow-amber { box-shadow: 0 0 0 1px var(--amber-soft), 0 0 18px rgba(246,169,59,0.26), var(--shadow-raise); }
-
-/* Brushed-metal button (black text — the readability rule) */
-.glz-btn-metal {
-  color: var(--ink-on-metal); border: 1px solid var(--line-metal); font-weight: 700;
-  background:
-    linear-gradient(176deg, rgba(255,255,255,0.60) 0%, rgba(255,255,255,0) 12%),
-    linear-gradient(145deg, var(--metal-hi), var(--metal-2) 45%, var(--metal-4) 80%, var(--metal-1));
-  box-shadow: var(--inset-metal);
-}
-.glz-btn-metal:hover { filter: brightness(1.05); transform: translateY(-1px); background:
-    linear-gradient(176deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0) 12%),
-    linear-gradient(145deg, var(--metal-hi), var(--metal-1) 45%, var(--metal-3) 80%, var(--metal-hi)); }
-
-/* ---- TEXT-READABLE (black on metal, deep-teal on hover/active) ---- */
-.glz-text-readable { color: var(--ink-on-metal); }
-.glz-text-readable.glz-dim { color: var(--ink-on-metal-dim); }
-
-.glz-queue-item {
-  position: relative;
-  display: flex; align-items: center; gap: var(--sp-3);
-  padding: var(--sp-3) var(--sp-4);
-  color: var(--ink-on-metal);
-  font-family: var(--font-mono); font-size: 13px;
-  border-radius: var(--r-sm); cursor: pointer;
-  transition: color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
-}
-.glz-queue-item::before {
-  content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%) scaleY(0);
-  width: 3px; height: 64%; border-radius: 2px; background: var(--teal);
-  box-shadow: 0 0 10px var(--teal-soft); transition: transform var(--t-fast) var(--ease);
-}
-.glz-queue-item:hover { color: var(--teal-ink); background: rgba(255, 255, 255, 0.28); }
-.glz-queue-item.glz-active { color: var(--teal-ink); background: rgba(63, 224, 208, 0.16); font-weight: 700; }
-.glz-queue-item.glz-active::before { transform: translateY(-50%) scaleY(1); }
-
-/* ---- ELECTRIC LINES (the webhook-bridge motif) ---- */
-.glz-electric-line { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
-.glz-electric-line path {
-  fill: none; stroke: var(--teal); stroke-width: 1.4; stroke-dasharray: 5 9;
-  filter: drop-shadow(0 0 4px var(--teal-soft)); animation: glz-flow 2.6s linear infinite; opacity: 0.85;
-}
-.glz-electric-line path.glz-slow { animation-duration: 4.2s; opacity: 0.5; }
-@keyframes glz-flow { to { stroke-dashoffset: -56; } }
-@media (prefers-reduced-motion: reduce) { .glz-electric-line path { animation: none; } }
-
-.glz-node-dot {
-  width: 9px; height: 9px; border-radius: 50%; background: var(--teal);
-  box-shadow: 0 0 0 4px var(--teal-faint), 0 0 14px var(--teal-soft);
-}
-
-/* ---- CONTROLS ---- */
-.glz-btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-3);
-  width: auto;
-  padding: 13px 18px;
-  font-family: var(--font-ui); font-size: 14px; font-weight: 600;
-  border-radius: var(--r-md); cursor: pointer;
-  border: 1px solid var(--line-dark); color: var(--ink-on-dark);
-  background: rgba(255, 255, 255, 0.04); transition: all var(--t-base) var(--ease);
-}
-.glz-btn:hover { border-color: var(--teal-soft); background: rgba(63, 224, 208, 0.08); transform: translateY(-1px); }
-.glz-btn svg { width: 18px; height: 18px; }
-.glz-btn-block { width: 100%; }
-.glz-btn-primary {
-  border: none; color: #04201d; font-weight: 700;
-  background: linear-gradient(135deg, var(--teal-bright), var(--teal));
-  box-shadow: 0 0 22px rgba(63, 224, 208, 0.35);
-}
-.glz-btn-primary:hover { filter: brightness(1.06); transform: translateY(-1px); }
-
-.glz-field {
-  width: 100%; padding: 13px 16px;
-  font-family: var(--font-mono); font-size: 13px; color: var(--ink-on-dark);
-  background: rgba(4, 8, 14, 0.55); border: 1px solid var(--line-dark);
-  border-radius: var(--r-md); transition: all var(--t-base) var(--ease);
-}
-.glz-field::placeholder { color: var(--ink-on-dark-dim); }
-.glz-field:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal-faint); }
-
-.glz-divider { display: flex; align-items: center; gap: var(--sp-4); color: var(--ink-on-dark-dim);
-  font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px; }
-.glz-divider::before, .glz-divider::after { content: ""; flex: 1; height: 1px; background: var(--line-dark); }
-.glz-label-mono { font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px;
-  text-transform: uppercase; color: var(--ink-on-dark-dim); }
-`,
-};
-
 ASSETS["index.html"] = {
   contentType: "text/html",
   content: `<!DOCTYPE html>
@@ -2871,7 +3976,7 @@ document.addEventListener('keydown', function(e) {
     stackOptions.classList.remove('open');
   });
   if(handoffGenBtn) handoffGenBtn.addEventListener('click', function(){
-    var api = window.WebhooksEmail;
+    var api = window.DipDesigns;
     if(!api){ alert('Studio not ready. Try again.'); return; }
     var result = api.getLastResult();
     if(!result){ alert('Nothing to export — generate a UI first.'); return; }
@@ -2994,6 +4099,308 @@ document.addEventListener('keydown', function(e) {
   },true);
 })();
 </script>
+</body>
+</html>
+`,
+};
+
+ASSETS["inspiration.html"] = {
+  contentType: "text/html",
+  content: `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DipDesigns — Inspiration</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="glazier.css">
+  <style>
+    html{scroll-behavior:smooth;}
+    body{overflow-x:hidden;}
+    .wrap{max-width:1140px;margin:0 auto;padding:0 6vw;}
+    .bg{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(1100px 640px at 50% -8%,rgba(63,224,208,.09),transparent 60%),radial-gradient(820px 760px at 90% 8%,rgba(246,169,59,.07),transparent 58%),radial-gradient(900px 800px at 8% 108%,rgba(36,75,110,.30),transparent 60%),linear-gradient(180deg,var(--bg-base),var(--bg-void));}
+    .bg::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(120,170,210,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(120,170,210,.045) 1px,transparent 1px);background-size:46px 46px;-webkit-mask-image:radial-gradient(circle at 50% 28%,#000 18%,transparent 72%);mask-image:radial-gradient(circle at 50% 28%,#000 18%,transparent 72%);}
+    .page{position:relative;z-index:1;}
+
+    header{display:flex;align-items:center;gap:18px;padding:18px 6vw;position:sticky;top:0;z-index:20;background:linear-gradient(180deg,rgba(7,11,18,.85),rgba(7,11,18,0));-webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);}
+    .brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:17px;letter-spacing:-.3px;}
+    .brand .badge{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;}
+    .brand .badge .glz-node-dot{width:8px;height:8px;}
+    header nav{margin-left:auto;display:flex;gap:6px;align-items:center;}
+    header nav a.link{color:var(--ink-on-dark-dim);text-decoration:none;font-size:14px;padding:8px 12px;border-radius:8px;transition:color var(--t-fast);}
+    header nav a.link:hover{color:var(--teal);}
+    header nav a.link.active{color:var(--teal);font-weight:600;}
+    @media(max-width:820px){header nav .link{display:none;}}
+
+    .hero{padding:48px 0 20px;text-align:center;}
+    .hero h1{font-size:clamp(32px,5.5vw,60px);line-height:1.05;font-weight:900;letter-spacing:-1.5px;margin:0 auto 18px;max-width:16ch;}
+    .hero h1 .accent{background:linear-gradient(120deg,var(--metal-hi),var(--metal-2) 60%,var(--metal-4));-webkit-background-clip:text;background-clip:text;color:transparent;}
+    .hero .sub{max-width:58ch;margin:0 auto 28px;font-size:clamp(15px,2vw,18px);line-height:1.55;color:var(--ink-on-dark-dim);}
+    .search-bar{max-width:520px;margin:0 auto 32px;position:relative;}
+    .search-bar input{width:100%;padding:14px 18px 14px 44px;border-radius:var(--r-pill);border:1px solid var(--line-dark);background:rgba(255,255,255,.04);color:var(--ink-on-dark);font-family:var(--font-ui);font-size:15px;outline:none;transition:border-color var(--t-fast);}
+    .search-bar input:focus{border-color:var(--teal-soft);}
+    .search-bar::before{content:"\\2315";position:absolute;left:17px;top:50%;transform:translateY(-50%);font-size:18px;color:var(--ink-on-dark-dim);pointer-events:none;}
+
+    .insp-tabs{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:32px;}
+    .tab-btn{padding:8px 16px;border-radius:var(--r-pill);border:1px solid var(--line-dark);background:rgba(255,255,255,.03);color:var(--ink-on-dark-dim);font-size:13px;font-family:var(--font-ui);cursor:pointer;transition:all var(--t-fast);}
+    .tab-btn:hover{border-color:var(--teal-soft);color:var(--ink-on-dark);}
+    .tab-btn.on{background:var(--teal);color:#04201d;font-weight:700;border-color:var(--teal);}
+
+    .section{margin-bottom:56px;}
+    .sec-head{margin-bottom:24px;}
+    .sec-head h2{font-size:clamp(22px,3vw,30px);font-weight:800;letter-spacing:-.5px;margin:0 0 6px;}
+    .sec-head p{color:var(--ink-on-dark-dim);font-size:15px;line-height:1.5;margin:0;}
+    .prompt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;}
+
+    .prompt-card{border:1px solid var(--line-dark);border-radius:var(--r-md);background:rgba(8,14,22,.55);padding:16px;transition:all var(--t-base);cursor:pointer;position:relative;overflow:hidden;}
+    .prompt-card:hover{border-color:var(--teal-soft);background:rgba(63,224,208,.04);transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,0,0,.3);}
+    .prompt-card .tag{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:10px;letter-spacing:1px;color:var(--amber);margin-bottom:10px;}
+    .prompt-card h3{font-size:16px;font-weight:700;margin:0 0 8px;letter-spacing:-.3px;}
+    .prompt-card p{font-size:13px;color:var(--ink-on-dark-dim);line-height:1.5;margin:0 0 14px;max-height:58px;overflow:hidden;}
+    .prompt-card .meta{display:flex;align-items:center;gap:10px;font-family:var(--font-mono);font-size:11px;color:var(--ink-on-dark-dim);}
+    .prompt-card .meta span{display:inline-flex;align-items:center;gap:4px;}
+    .prompt-card .launch{position:absolute;bottom:12px;right:12px;width:32px;height:32px;border-radius:50%;border:1px solid var(--teal-soft);background:var(--teal);color:#04201d;display:grid;place-items:center;font-size:16px;opacity:0;transition:all var(--t-base);}
+    .prompt-card:hover .launch{opacity:1;}
+
+    .featured{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;}
+    .feat-card{border:1px solid var(--line-dark);border-radius:var(--r-md);overflow:hidden;transition:all var(--t-base);cursor:pointer;}
+    .feat-card:hover{border-color:var(--teal-soft);transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,0,0,.3);}
+    .feat-card .thumb{height:180px;background:linear-gradient(165deg,#0c1420,#070b12);display:grid;place-items:center;position:relative;overflow:hidden;}
+    .feat-card .thumb .mini-frame{width:80%;height:80%;border:1px solid var(--line-dark);border-radius:8px;position:relative;overflow:hidden;}
+    .feat-card .thumb .mini-bar{height:18px;border-bottom:1px solid var(--line-dark);display:flex;align-items:center;gap:4px;padding:0 6px;}
+    .feat-card .thumb .mini-bar i{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.12);}
+    .feat-card .thumb .mini-bar i:first-child{background:var(--ember);opacity:.5;}
+    .feat-card .thumb .mini-body{padding:8px;display:flex;flex-direction:column;gap:5px;}
+    .feat-card .thumb .mini-row{height:7px;border-radius:3px;background:rgba(120,170,210,.15);}
+    .feat-card .thumb .mini-row.w{width:60%;}
+    .feat-card .thumb .mini-row.c{width:40%;background:rgba(63,224,208,.3);}
+    .feat-card .thumb .mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+    .feat-card .thumb .mini-grid .b{height:40px;border-radius:4px;background:rgba(120,170,210,.08);}
+    .feat-card .info{padding:14px;}
+    .feat-card .info h3{font-size:15px;font-weight:700;margin:0 0 6px;}
+    .feat-card .info p{font-size:13px;color:var(--ink-on-dark-dim);margin:0 0 10px;}
+    .feat-card .info .tags{display:flex;gap:6px;flex-wrap:wrap;}
+    .feat-card .info .tags span{font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid var(--line-dark);color:var(--ink-on-dark-dim);font-family:var(--font-mono);}
+
+    .trend{display:flex;gap:10px;overflow-x:auto;padding:4px 0 20px;scrollbar-width:thin;scrollbar-color:var(--glazier-edge) transparent;}
+    .trend::-webkit-scrollbar{height:3px;}
+    .trend::-webkit-scrollbar-thumb{background:var(--glazier-edge);border-radius:3px;}
+    .trend-card{flex-shrink:0;width:240px;border:1px solid var(--line-dark);border-radius:var(--r-md);background:rgba(8,14,22,.55);padding:14px;transition:all var(--t-base);cursor:pointer;}
+    .trend-card:hover{border-color:var(--teal-soft);}
+    .trend-card .trend-num{font-family:var(--font-mono);font-size:12px;color:var(--amber);margin-bottom:8px;}
+    .trend-card h3{font-size:14px;font-weight:700;margin:0 0 8px;}
+    .trend-card p{font-size:12px;color:var(--ink-on-dark-dim);line-height:1.45;margin:0 0 12px;}
+    .trend-card .trend-meta{display:flex;align-items:center;justify-content:space-between;font-family:var(--font-mono);font-size:10px;color:var(--ink-on-dark-dim);}
+
+    .cta-section{padding:48px 0;text-align:center;border-top:1px solid var(--line-dark);margin-top:16px;}
+    .cta-section h2{font-size:clamp(26px,4vw,38px);font-weight:900;letter-spacing:-1px;margin:0 auto 14px;}
+    .cta-section p{max-width:48ch;margin:0 auto 20px;color:var(--ink-on-dark-dim);font-size:15px;}
+
+    @media(max-width:640px){
+      .prompt-grid{grid-template-columns:1fr;}
+      .featured{grid-template-columns:1fr;}
+    }
+  </style>
+</head>
+<body class="glz-body">
+  <div class="bg"></div>
+  <div class="page">
+    <header>
+      <div class="brand">
+        <span class="badge glz-surface-metal"><span class="glz-node-dot"></span></span>
+        DipDesigns
+      </div>
+      <nav>
+        <a class="link" href="/">Home</a>
+        <a class="link active" href="/inspiration.html">Inspiration</a>
+        <a class="link" href="/studio">Studio</a>
+        <a class="link" href="/signin.html">Sign in</a>
+      </nav>
+    </header>
+
+    <div class="wrap">
+      <section class="hero">
+        <h1>What will you <span class="accent">build?</span></h1>
+        <p class="sub">Curated prompts, trending interfaces, and hand-picked skills. Click any card to launch it in the Studio.</p>
+        <div class="search-bar">
+          <input type="text" id="searchInput" placeholder="Search prompts, interfaces, skills..." />
+        </div>
+        <div class="insp-tabs" id="tabs">
+          <button class="tab-btn on" data-tab="all">All</button>
+          <button class="tab-btn" data-tab="dashboards">Dashboards</button>
+          <button class="tab-btn" data-tab="landing">Landing Pages</button>
+          <button class="tab-btn" data-tab="forms">Forms & Onboarding</button>
+          <button class="tab-btn" data-tab="data">Data & Tables</button>
+          <button class="tab-btn" data-tab="creative">Creative</button>
+        </div>
+      </section>
+
+      <!-- Featured Prompts -->
+      <section class="section" id="sec-prompts">
+        <div class="sec-head">
+          <h2>Featured Prompts</h2>
+          <p>Click any prompt to launch it in the Studio. One click, zero friction.</p>
+        </div>
+        <div class="prompt-grid" id="promptGrid"></div>
+      </section>
+
+      <!-- Featured Interfaces -->
+      <section class="section" id="sec-interfaces">
+        <div class="sec-head">
+          <h2>Featured Interfaces</h2>
+          <p>Ready-to-build interface concepts. Preview and adapt.</p>
+        </div>
+        <div class="featured" id="featuredGrid"></div>
+      </section>
+
+      <!-- Trending Now -->
+      <section class="section" id="sec-trending">
+        <div class="sec-head">
+          <h2>Trending Now</h2>
+          <p>What the community is building right now.</p>
+        </div>
+        <div class="trend" id="trendingGrid"></div>
+      </section>
+
+      <section class="cta-section">
+        <h2>Ready to build?</h2>
+        <p>Every prompt works. Every interface ships. Click any card above to launch in Studio.</p>
+        <a href="/studio" class="glz-btn glz-btn-primary">Open Studio</a>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const PROMPTS = [
+      {id:'p1', title:'Analytics Dashboard', text:'A dark analytics dashboard with a sidebar, four KPI cards, a line chart, a bar chart, and a data table with sortable columns. Teal accents, clean typography, mobile responsive.', category:'dashboards', tags:['dashboard','analytics','chart'], difficulty:'Medium', uses:124},
+      {id:'p2', title:'SaaS Pricing Page', text:'A pricing page with three tiers: Starter, Pro, and Enterprise. Each card shows features, price, and a CTA button. Toggle between monthly and annual. Dark theme with teal accents.', category:'landing', tags:['pricing','landing','saas'], difficulty:'Easy', uses:89},
+      {id:'p3', title:'Multi-Step Onboarding Wizard', text:'A step-by-step onboarding wizard with a progress bar, form validation, and animated transitions. Three steps: profile, preferences, confirmation. Glass-morphism aesthetic.', category:'forms', tags:['onboarding','form','wizard'], difficulty:'Medium', uses:67},
+      {id:'p4', title:'Real-Time Data Table', text:'A data table with server-side pagination, search, sort, and filter. Row selection with bulk actions. Empty state with illustration. Dark theme, teal accent for selected rows.', category:'data', tags:['table','data','admin'], difficulty:'Hard', uses:156},
+      {id:'p5', title:'Portfolio / Creative Agency', text:'A creative agency landing page with a hero section, featured work grid, client testimonials, and a contact form. Full-width hero with parallax effect. Typography-heavy, minimal color.', category:'landing', tags:['portfolio','creative','landing'], difficulty:'Medium', uses:98},
+      {id:'p6', title:'Kanban Board', text:'A drag-and-drop kanban board with three columns: To Do, In Progress, Done. Cards with labels, assignees, and due dates. Add/edit/delete cards. Dark background, colorful labels.', category:'creative', tags:['kanban','project-management','board'], difficulty:'Hard', uses:203},
+      {id:'p7', title:'Login / Signup Modal', text:'A clean authentication modal with email/password fields, social login buttons (GitHub, Google), and a forgot password link. Toggle between login and signup with a smooth slide animation.', category:'forms', tags:['auth','modal','login'], difficulty:'Easy', uses:312},
+      {id:'p8', title:'E-Commerce Product Grid', text:'A product grid with filter sidebar, sort dropdown, and product cards with hover zoom, price, rating, and add-to-cart button. Responsive, 3-column desktop, 2-column tablet, 1-column mobile.', category:'data', tags:['e-commerce','product','grid'], difficulty:'Medium', uses:145},
+      {id:'p9', title:'AI Chat Interface', text:'A chat interface with a message list, input bar with send button, typing indicator, and message bubbles. User messages on right, assistant on left. Dark mode with teal accent. Auto-scroll to bottom.', category:'creative', tags:['chat','messaging','ai'], difficulty:'Easy', uses:278},
+      {id:'p10', title:'Settings Panel', text:'A comprehensive settings panel with tabs: Profile, Account, Notifications, Appearance, Billing. Each tab has relevant forms, toggles, and dropdowns. Dark theme, glass sidebar, clean inputs.', category:'dashboards', tags:['settings','admin','panel'], difficulty:'Medium', uses:87},
+      {id:'p11', title:'Event Calendar', text:'A monthly calendar view with day cells, event indicators, and a day-detail slide-out panel. Click a day to add events. Drag to reschedule. Dark theme, amber accent for events.', category:'creative', tags:['calendar','events','date'], difficulty:'Medium', uses:56},
+      {id:'p12', title:'API Documentation Page', text:'An interactive API docs page with endpoint navigation, code examples in a dark code block, copy button, and response schema accordion. Three-column layout: nav, content, code examples.', category:'data', tags:['docs','api','documentation'], difficulty:'Medium', uses:134},
+    ];
+
+    const INTERFACES = [
+      {id:'i1', title:'Dark SaaS Dashboard', desc:'Full analytics suite with charts, KPIs, and a sidebar. Perfect for a B2B product launch.', tags:['dashboard','saas','analytics']},
+      {id:'i2', title:'Crypto Exchange UI', desc:'Order book, candlestick chart, and portfolio balance. Real-time feel, dark theme.', tags:['fintech','crypto','trading']},
+      {id:'i3', title:'Music Player App', desc:'Album art, waveform visualization, playlist, and controls. Immersive dark aesthetic.', tags:['media','music','creative']},
+      {id:'i4', title:'Social Feed', desc:'Card-based feed with likes, comments, shares, and a composer. Story row at top. Mobile-first.', tags:['social','feed','mobile']},
+    ];
+
+    const TRENDING = [
+      {id:'t1', rank:'#1', title:'AI Code Review Assistant', desc:'An interface where you paste code and get inline review comments with severity badges.', source:'3h ago', views:482},
+      {id:'t2', rank:'#2', title:'Notion-style Notes App', desc:'A block-based note editor with slash commands, drag-to-reorder, and nested pages.', source:'6h ago', views:356},
+      {id:'t3', rank:'#3', title:'Restaurant Menu Builder', desc:'Interactive menu builder with category tabs, add-to-cart, and checkout flow. Mobile-first.', source:'12h ago', views:291},
+      {id:'t4', rank:'#4', title:'Fitness Tracker', desc:'Workout logger with progress charts, streak counter, and achievement badges. Dark mode.', source:'1d ago', views:234},
+      {id:'t5', rank:'#5', title:'Travel Booking Flow', desc:'Multi-step booking wizard: search, filters, results, detail, checkout. Map integration.', source:'1d ago', views:198},
+    ];
+
+    function renderPrompts(filter){
+      const grid = document.getElementById('promptGrid');
+      const filtered = filter === 'all' ? PROMPTS : PROMPTS.filter(p => p.category === filter);
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const final = search ? filtered.filter(p => p.title.toLowerCase().includes(search) || p.text.toLowerCase().includes(search) || p.tags.some(t => t.toLowerCase().includes(search))) : filtered;
+      grid.innerHTML = final.map(p => \`
+        <div class="prompt-card" data-prompt="\${p.text.replace(/"/g, '&quot;')}">
+          <div class="tag">\${p.category.toUpperCase()}</div>
+          <h3>\${p.title}</h3>
+          <p>\${p.text}</p>
+          <div class="meta">
+            <span><span style="color:var(--teal)">&#9679;</span> \${p.difficulty}</span>
+            <span>\${p.uses} uses</span>
+          </div>
+          <div class="launch">&#8599;</div>
+        </div>
+      \`).join('');
+      document.querySelectorAll('.prompt-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const prompt = card.getAttribute('data-prompt');
+          window.location.href = '/studio?prompt=' + encodeURIComponent(prompt);
+        });
+      });
+    }
+
+    function renderInterfaces(){
+      const grid = document.getElementById('featuredGrid');
+      grid.innerHTML = INTERFACES.map(i => \`
+        <div class="feat-card" data-prompt="\${i.desc.replace(/"/g, '&quot;')}">
+          <div class="thumb">
+            <div class="mini-frame">
+              <div class="mini-bar"><i></i><i></i><i></i></div>
+              <div class="mini-body">
+                <div class="mini-row"></div>
+                <div class="mini-row w"></div>
+                <div class="mini-grid"><div class="b"></div><div class="b"></div></div>
+                <div class="mini-row c"></div>
+                <div class="mini-row w"></div>
+              </div>
+            </div>
+          </div>
+          <div class="info">
+            <h3>\${i.title}</h3>
+            <p>\${i.desc}</p>
+            <div class="tags">\${i.tags.map(t => \`<span>\${t}</span>\`).join('')}</div>
+          </div>
+        </div>
+      \`).join('');
+      document.querySelectorAll('.feat-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const prompt = card.getAttribute('data-prompt');
+          window.location.href = '/studio?prompt=' + encodeURIComponent(prompt);
+        });
+      });
+    }
+
+    function renderTrending(){
+      const grid = document.getElementById('trendingGrid');
+      grid.innerHTML = TRENDING.map(t => \`
+        <div class="trend-card" data-prompt="\${t.desc.replace(/"/g, '&quot;')}">
+          <div class="trend-num">\${t.rank}</div>
+          <h3>\${t.title}</h3>
+          <p>\${t.desc}</p>
+          <div class="trend-meta">
+            <span>\${t.source}</span>
+            <span>\${t.views} views</span>
+          </div>
+        </div>
+      \`).join('');
+      document.querySelectorAll('.trend-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const prompt = card.getAttribute('data-prompt');
+          window.location.href = '/studio?prompt=' + encodeURIComponent(prompt);
+        });
+      });
+    }
+
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('on'));
+        btn.classList.add('on');
+        renderPrompts(btn.getAttribute('data-tab'));
+      });
+    });
+
+    // Search
+    document.getElementById('searchInput').addEventListener('input', () => {
+      const activeTab = document.querySelector('.tab-btn.on').getAttribute('data-tab');
+      renderPrompts(activeTab);
+    });
+
+    renderPrompts('all');
+    renderInterfaces();
+    renderTrending();
+  </script>
 </body>
 </html>
 `,
@@ -3445,397 +4852,6 @@ ASSETS["signin.html"] = {
       if (e && /.+@.+\\..+/.test(e)) { msg.textContent = '\\u2713 You are on the list — we will email when magic-link is live.'; msg.style.color = 'var(--teal)'; }
       else { msg.textContent = 'Enter a valid email to join the magic-link waitlist.'; msg.style.color = 'var(--amber)'; }
     };
-  </script>
-</body>
-</html>
-`,
-};
-
-ASSETS["tokens.css"] = {
-  contentType: "text/css",
-  content: `/* ============================================================================
-   GLAZIER KIT · tokens.css   (v2 — hardened)
-   Single source of truth. Pure CSS custom properties. No build, no dependency.
-   v2 changes: added pre-alpha'd glass tokens so glazier.css needs NO color-mix().
-   ============================================================================ */
-
-:root {
-  /* ---- Canvas (near-black → black) ---- */
-  --bg-void:        #04060a;
-  --bg-base:        #070b12;
-  --bg-raise:       #0b111b;
-
-  /* ---- Glazier blue (the glass) ---- */
-  --glazier-1:      #16273d;
-  --glazier-2:      #0d1726;
-  --glazier-edge:   #2f5f86;
-  --glazier-deep:   #0a2036;
-  /* pre-alpha'd glass fills — replace color-mix() for full browser support */
-  --glazier-glass-1: rgba(22, 39, 61, 0.78);   /* = #16273d @ 78% */
-  --glazier-glass-2: rgba(13, 23, 38, 0.72);   /* = #0d1726 @ 72% */
-
-  /* ---- Brushed metal (the silver) ---- */
-  --metal-hi:       #eef2f6;
-  --metal-1:        #d4dbe3;
-  --metal-2:        #b9c2cc;
-  --metal-3:        #9aa4b1;
-  --metal-4:        #7e8a98;
-  --metal-lo:       #6c7886;
-
-  /* ---- Electric teal (accent / selection / glow) ---- */
-  --teal:           #3fe0d0;
-  --teal-bright:    #6bf0e3;
-  --teal-ink:       #0a8f81;   /* deepened teal — legible on silver */
-  --teal-soft:      rgba(63, 224, 208, 0.45);
-  --teal-faint:     rgba(63, 224, 208, 0.14);
-
-  /* ---- Warm accent (sparing counterpoint: red-ish → amber) ---- */
-  --ember:          #ff6a3d;   /* red-ish */
-  --amber:          #f6a93b;   /* amber */
-  --warm-grad:      linear-gradient(135deg, #ff7a4d, #f6a93b);
-  --ember-soft:     rgba(255, 106, 61, 0.40);
-  --amber-soft:     rgba(246, 169, 59, 0.38);
-  --amber-faint:    rgba(246, 169, 59, 0.12);
-
-  /* ---- Text ---- */
-  --ink-on-dark:    #e6edf5;
-  --ink-on-dark-dim:#9fb0c3;
-  --ink-on-metal:   #0a0e14;
-  --ink-on-metal-dim:#262d37;   /* darker slate — high contrast on silver (no low-opacity grey) */
-
-  /* ---- Hairlines & dividers ---- */
-  --line-dark:      rgba(120, 170, 210, 0.16);
-  --line-metal:     rgba(255, 255, 255, 0.5);
-
-  /* ---- Blur ---- */
-  --blur-glass:     blur(18px) saturate(140%);
-
-  /* ---- Shadows (depth) ---- */
-  --shadow-card:    0 24px 60px rgba(0, 0, 0, 0.55);
-  --shadow-raise:   0 10px 30px rgba(0, 0, 0, 0.45);
-  --inset-glass:    inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  --inset-metal:    inset 0 1px 0 rgba(255, 255, 255, 0.85),
-                    inset 0 -1px 2px rgba(0, 0, 0, 0.28);
-
-  /* ---- Radii ---- */
-  --r-sm: 8px;  --r-md: 14px;  --r-lg: 20px;  --r-pill: 999px;
-
-  /* ---- Spacing scale ---- */
-  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
-  --sp-5: 24px; --sp-6: 32px; --sp-7: 48px; --sp-8: 64px;
-
-  /* ---- Type ---- */
-  --font-ui:   'Outfit', system-ui, -apple-system, sans-serif;
-  --font-mono: 'Space Mono', ui-monospace, 'SF Mono', monospace;
-
-  /* ---- Motion ---- */
-  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
-  --t-fast: 0.15s;  --t-base: 0.3s;
-}
-`,
-};
-
-ASSETS["icon.svg"] = {
-  contentType: "image/svg+xml",
-  content: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" fill="none"><rect width="192" height="192" fill="#04060a" rx="32"/><path d="M96 48c-26.5 0-48 18.5-48 48 0 29.5 21.5 64 48 64s48-34.5 48-64c0-29.5-21.5-48-48-48zm-10 24c5.5 0 10 4.5 10 10s-4.5 10-10 10-10-4.5-10-10 4.5-10 10-10zm20 40c-5.5 0-10-4.5-10-10s4.5-10 10-10 10 4.5 10 10-4.5 10-10 10z" fill="#3fe0d0" stroke="#3fe0d0" stroke-width="2"/><circle cx="96" cy="96" r="8" fill="#ff6a3d"/><path d="M96 36v20M96 140v20M36 96h20M140 96h20" stroke="#3fe0d0" stroke-width="3" stroke-linecap="round" opacity="0.4"/></svg>`,
-};
-
-ASSETS["inspiration.html"] = {
-  contentType: "text/html",
-  content: `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DipDesigns — Inspiration</title>
-  <link rel="manifest" href="manifest.json">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="tokens.css">
-  <link rel="stylesheet" href="glazier.css">
-  <style>
-    html{scroll-behavior:smooth;}
-    body{overflow-x:hidden;}
-    .wrap{max-width:1140px;margin:0 auto;padding:0 6vw;}
-    .bg{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(1100px 640px at 50% -8%,rgba(63,224,208,.09),transparent 60%),radial-gradient(820px 760px at 90% 8%,rgba(246,169,59,.07),transparent 58%),radial-gradient(900px 800px at 8% 108%,rgba(36,75,110,.30),transparent 60%),linear-gradient(180deg,var(--bg-base),var(--bg-void));}
-    .bg::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(120,170,210,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(120,170,210,.045) 1px,transparent 1px);background-size:46px 46px;-webkit-mask-image:radial-gradient(circle at 50% 28%,#000 18%,transparent 72%);mask-image:radial-gradient(circle at 50% 28%,#000 18%,transparent 72%);}
-    .page{position:relative;z-index:1;}
-
-    header{display:flex;align-items:center;gap:18px;padding:18px 6vw;position:sticky;top:0;z-index:20;background:linear-gradient(180deg,rgba(7,11,18,.85),rgba(7,11,18,0));-webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);}
-    .brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:17px;letter-spacing:-.3px;}
-    .brand .badge{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;}
-    .brand .badge .glz-node-dot{width:8px;height:8px;}
-    header nav{margin-left:auto;display:flex;gap:6px;align-items:center;}
-    header nav a.link{color:var(--ink-on-dark-dim);text-decoration:none;font-size:14px;padding:8px 12px;border-radius:8px;transition:color var(--t-fast);}
-    header nav a.link:hover{color:var(--teal);}
-    header nav a.link.active{color:var(--teal);font-weight:600;}
-    @media(max-width:820px){header nav .link{display:none;}}
-
-    .hero{padding:48px 0 20px;text-align:center;}
-    .hero h1{font-size:clamp(32px,5.5vw,60px);line-height:1.05;font-weight:900;letter-spacing:-1.5px;margin:0 auto 18px;max-width:16ch;}
-    .hero h1 .accent{background:linear-gradient(120deg,var(--metal-hi),var(--metal-2) 60%,var(--metal-4));-webkit-background-clip:text;background-clip:text;color:transparent;}
-    .hero .sub{max-width:58ch;margin:0 auto 28px;font-size:clamp(15px,2vw,18px);line-height:1.55;color:var(--ink-on-dark-dim);}
-    .search-bar{max-width:520px;margin:0 auto 32px;position:relative;}
-    .search-bar input{width:100%;padding:14px 18px 14px 44px;border-radius:var(--r-pill);border:1px solid var(--line-dark);background:rgba(255,255,255,.04);color:var(--ink-on-dark);font-family:var(--font-ui);font-size:15px;outline:none;transition:border-color var(--t-fast);}
-    .search-bar input:focus{border-color:var(--teal-soft);}
-    .search-bar::before{content:"\\2315";position:absolute;left:17px;top:50%;transform:translateY(-50%);font-size:18px;color:var(--ink-on-dark-dim);pointer-events:none;}
-
-    .insp-tabs{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:32px;}
-    .tab-btn{padding:8px 16px;border-radius:var(--r-pill);border:1px solid var(--line-dark);background:rgba(255,255,255,.03);color:var(--ink-on-dark-dim);font-size:13px;font-family:var(--font-ui);cursor:pointer;transition:all var(--t-fast);}
-    .tab-btn:hover{border-color:var(--teal-soft);color:var(--ink-on-dark);}
-    .tab-btn.on{background:var(--teal);color:#04201d;font-weight:700;border-color:var(--teal);}
-
-    .section{margin-bottom:56px;}
-    .sec-head{margin-bottom:24px;}
-    .sec-head h2{font-size:clamp(22px,3vw,30px);font-weight:800;letter-spacing:-.5px;margin:0 0 6px;}
-    .sec-head p{color:var(--ink-on-dark-dim);font-size:15px;line-height:1.5;margin:0;}
-    .prompt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;}
-
-    .prompt-card{border:1px solid var(--line-dark);border-radius:var(--r-md);background:rgba(8,14,22,.55);padding:16px;transition:all var(--t-base);cursor:pointer;position:relative;overflow:hidden;}
-    .prompt-card:hover{border-color:var(--teal-soft);background:rgba(63,224,208,.04);transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,0,0,.3);}
-    .prompt-card .tag{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:10px;letter-spacing:1px;color:var(--amber);margin-bottom:10px;}
-    .prompt-card h3{font-size:16px;font-weight:700;margin:0 0 8px;letter-spacing:-.3px;}
-    .prompt-card p{font-size:13px;color:var(--ink-on-dark-dim);line-height:1.5;margin:0 0 14px;max-height:58px;overflow:hidden;}
-    .prompt-card .meta{display:flex;align-items:center;gap:10px;font-family:var(--font-mono);font-size:11px;color:var(--ink-on-dark-dim);}
-    .prompt-card .meta span{display:inline-flex;align-items:center;gap:4px;}
-    .prompt-card .launch{position:absolute;bottom:12px;right:12px;width:32px;height:32px;border-radius:50%;border:1px solid var(--teal-soft);background:var(--teal);color:#04201d;display:grid;place-items:center;font-size:16px;opacity:0;transition:all var(--t-base);}
-    .prompt-card:hover .launch{opacity:1;}
-
-    .featured{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;}
-    .feat-card{border:1px solid var(--line-dark);border-radius:var(--r-md);overflow:hidden;transition:all var(--t-base);cursor:pointer;}
-    .feat-card:hover{border-color:var(--teal-soft);transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,0,0,.3);}
-    .feat-card .thumb{height:180px;background:linear-gradient(165deg,#0c1420,#070b12);display:grid;place-items:center;position:relative;overflow:hidden;}
-    .feat-card .thumb .mini-frame{width:80%;height:80%;border:1px solid var(--line-dark);border-radius:8px;position:relative;overflow:hidden;}
-    .feat-card .thumb .mini-bar{height:18px;border-bottom:1px solid var(--line-dark);display:flex;align-items:center;gap:4px;padding:0 6px;}
-    .feat-card .thumb .mini-bar i{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.12);}
-    .feat-card .thumb .mini-bar i:first-child{background:var(--ember);opacity:.5;}
-    .feat-card .thumb .mini-body{padding:8px;display:flex;flex-direction:column;gap:5px;}
-    .feat-card .thumb .mini-row{height:7px;border-radius:3px;background:rgba(120,170,210,.15);}
-    .feat-card .thumb .mini-row.w{width:60%;}
-    .feat-card .thumb .mini-row.c{width:40%;background:rgba(63,224,208,.3);}
-    .feat-card .thumb .mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
-    .feat-card .thumb .mini-grid .b{height:40px;border-radius:4px;background:rgba(120,170,210,.08);}
-    .feat-card .info{padding:14px;}
-    .feat-card .info h3{font-size:15px;font-weight:700;margin:0 0 6px;}
-    .feat-card .info p{font-size:13px;color:var(--ink-on-dark-dim);margin:0 0 10px;}
-    .feat-card .info .tags{display:flex;gap:6px;flex-wrap:wrap;}
-    .feat-card .info .tags span{font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid var(--line-dark);color:var(--ink-on-dark-dim);font-family:var(--font-mono);}
-
-    .trend{display:flex;gap:10px;overflow-x:auto;padding:4px 0 20px;scrollbar-width:thin;scrollbar-color:var(--glazier-edge) transparent;}
-    .trend::-webkit-scrollbar{height:3px;}
-    .trend::-webkit-scrollbar-thumb{background:var(--glazier-edge);border-radius:3px;}
-    .trend-card{flex-shrink:0;width:240px;border:1px solid var(--line-dark);border-radius:var(--r-md);background:rgba(8,14,22,.55);padding:14px;transition:all var(--t-base);cursor:pointer;}
-    .trend-card:hover{border-color:var(--teal-soft);}
-    .trend-card .trend-num{font-family:var(--font-mono);font-size:12px;color:var(--amber);margin-bottom:8px;}
-    .trend-card h3{font-size:14px;font-weight:700;margin:0 0 8px;}
-    .trend-card p{font-size:12px;color:var(--ink-on-dark-dim);line-height:1.45;margin:0 0 12px;}
-    .trend-card .trend-meta{display:flex;align-items:center;justify-content:space-between;font-family:var(--font-mono);font-size:10px;color:var(--ink-on-dark-dim);}
-
-    .cta-section{padding:48px 0;text-align:center;border-top:1px solid var(--line-dark);margin-top:16px;}
-    .cta-section h2{font-size:clamp(26px,4vw,38px);font-weight:900;letter-spacing:-1px;margin:0 auto 14px;}
-    .cta-section p{max-width:48ch;margin:0 auto 20px;color:var(--ink-on-dark-dim);font-size:15px;}
-
-    @media(max-width:640px){
-      .prompt-grid{grid-template-columns:1fr;}
-      .featured{grid-template-columns:1fr;}
-    }
-  </style>
-</head>
-<body class="glz-body">
-  <div class="bg"></div>
-  <div class="page">
-    <header>
-      <div class="brand">
-        <span class="badge glz-surface-metal"><span class="glz-node-dot"></span></span>
-        DipDesigns
-      </div>
-      <nav>
-        <a class="link" href="/">Home</a>
-        <a class="link active" href="/inspiration.html">Inspiration</a>
-        <a class="link" href="/studio">Studio</a>
-        <a class="link" href="/signin.html">Sign in</a>
-      </nav>
-    </header>
-
-    <div class="wrap">
-      <section class="hero">
-        <h1>What will you <span class="accent">build?</span></h1>
-        <p class="sub">Curated prompts, trending interfaces, and hand-picked skills. Click any card to launch it in the Studio.</p>
-        <div class="search-bar">
-          <input type="text" id="searchInput" placeholder="Search prompts, interfaces, skills..." />
-        </div>
-        <div class="insp-tabs" id="tabs">
-          <button class="tab-btn on" data-tab="all">All</button>
-          <button class="tab-btn" data-tab="dashboards">Dashboards</button>
-          <button class="tab-btn" data-tab="landing">Landing Pages</button>
-          <button class="tab-btn" data-tab="forms">Forms & Onboarding</button>
-          <button class="tab-btn" data-tab="data">Data & Tables</button>
-          <button class="tab-btn" data-tab="creative">Creative</button>
-        </div>
-      </section>
-
-      <!-- Featured Prompts -->
-      <section class="section" id="sec-prompts">
-        <div class="sec-head">
-          <h2>Featured Prompts</h2>
-          <p>Click any prompt to launch it in the Studio. One click, zero friction.</p>
-        </div>
-        <div class="prompt-grid" id="promptGrid"></div>
-      </section>
-
-      <!-- Featured Interfaces -->
-      <section class="section" id="sec-interfaces">
-        <div class="sec-head">
-          <h2>Featured Interfaces</h2>
-          <p>Ready-to-build interface concepts. Preview and adapt.</p>
-        </div>
-        <div class="featured" id="featuredGrid"></div>
-      </section>
-
-      <!-- Trending Now -->
-      <section class="section" id="sec-trending">
-        <div class="sec-head">
-          <h2>Trending Now</h2>
-          <p>What the community is building right now.</p>
-        </div>
-        <div class="trend" id="trendingGrid"></div>
-      </section>
-
-      <section class="cta-section">
-        <h2>Ready to build?</h2>
-        <p>Every prompt works. Every interface ships. Click any card above to launch in Studio.</p>
-        <a href="/studio" class="glz-btn glz-btn-primary">Open Studio</a>
-      </section>
-    </div>
-  </div>
-
-  <script>
-    const PROMPTS = [
-      {id:'p1', title:'Analytics Dashboard', text:'A dark analytics dashboard with a sidebar, four KPI cards, a line chart, a bar chart, and a data table with sortable columns. Teal accents, clean typography, mobile responsive.', category:'dashboards', tags:['dashboard','analytics','chart'], difficulty:'Medium', uses:124},
-      {id:'p2', title:'SaaS Pricing Page', text:'A pricing page with three tiers: Starter, Pro, and Enterprise. Each card shows features, price, and a CTA button. Toggle between monthly and annual. Dark theme with teal accents.', category:'landing', tags:['pricing','landing','saas'], difficulty:'Easy', uses:89},
-      {id:'p3', title:'Multi-Step Onboarding Wizard', text:'A step-by-step onboarding wizard with a progress bar, form validation, and animated transitions. Three steps: profile, preferences, confirmation. Glass-morphism aesthetic.', category:'forms', tags:['onboarding','form','wizard'], difficulty:'Medium', uses:67},
-      {id:'p4', title:'Real-Time Data Table', text:'A data table with server-side pagination, search, sort, and filter. Row selection with bulk actions. Empty state with illustration. Dark theme, teal accent for selected rows.', category:'data', tags:['table','data','admin'], difficulty:'Hard', uses:156},
-      {id:'p5', title:'Portfolio / Creative Agency', text:'A creative agency landing page with a hero section, featured work grid, client testimonials, and a contact form. Full-width hero with parallax effect. Typography-heavy, minimal color.', category:'landing', tags:['portfolio','creative','landing'], difficulty:'Medium', uses:98},
-      {id:'p6', title:'Kanban Board', text:'A drag-and-drop kanban board with three columns: To Do, In Progress, Done. Cards with labels, assignees, and due dates. Add/edit/delete cards. Dark background, colorful labels.', category:'creative', tags:['kanban','project-management','board'], difficulty:'Hard', uses:203},
-      {id:'p7', title:'Login / Signup Modal', text:'A clean authentication modal with email/password fields, social login buttons (GitHub, Google), and a forgot password link. Toggle between login and signup with a smooth slide animation.', category:'forms', tags:['auth','modal','login'], difficulty:'Easy', uses:312},
-      {id:'p8', title:'E-Commerce Product Grid', text:'A product grid with filter sidebar, sort dropdown, and product cards with hover zoom, price, rating, and add-to-cart button. Responsive, 3-column desktop, 2-column tablet, 1-column mobile.', category:'data', tags:['e-commerce','product','grid'], difficulty:'Medium', uses:145},
-      {id:'p9', title:'AI Chat Interface', text:'A chat interface with a message list, input bar with send button, typing indicator, and message bubbles. User messages on right, assistant on left. Dark mode with teal accent. Auto-scroll to bottom.', category:'creative', tags:['chat','messaging','ai'], difficulty:'Easy', uses:278},
-      {id:'p10', title:'Settings Panel', text:'A comprehensive settings panel with tabs: Profile, Account, Notifications, Appearance, Billing. Each tab has relevant forms, toggles, and dropdowns. Dark theme, glass sidebar, clean inputs.', category:'dashboards', tags:['settings','admin','panel'], difficulty:'Medium', uses:87},
-      {id:'p11', title:'Event Calendar', text:'A monthly calendar view with day cells, event indicators, and a day-detail slide-out panel. Click a day to add events. Drag to reschedule. Dark theme, amber accent for events.', category:'creative', tags:['calendar','events','date'], difficulty:'Medium', uses:56},
-      {id:'p12', title:'API Documentation Page', text:'An interactive API docs page with endpoint navigation, code examples in a dark code block, copy button, and response schema accordion. Three-column layout: nav, content, code examples.', category:'data', tags:['docs','api','documentation'], difficulty:'Medium', uses:134},
-    ];
-
-    const INTERFACES = [
-      {id:'i1', title:'Dark SaaS Dashboard', desc:'Full analytics suite with charts, KPIs, and a sidebar. Perfect for a B2B product launch.', tags:['dashboard','saas','analytics']},
-      {id:'i2', title:'Crypto Exchange UI', desc:'Order book, candlestick chart, and portfolio balance. Real-time feel, dark theme.', tags:['fintech','crypto','trading']},
-      {id:'i3', title:'Music Player App', desc:'Album art, waveform visualization, playlist, and controls. Immersive dark aesthetic.', tags:['media','music','creative']},
-      {id:'i4', title:'Social Feed', desc:'Card-based feed with likes, comments, shares, and a composer. Story row at top. Mobile-first.', tags:['social','feed','mobile']},
-    ];
-
-    const TRENDING = [
-      {id:'t1', rank:'#1', title:'AI Code Review Assistant', desc:'An interface where you paste code and get inline review comments with severity badges.', source:'3h ago', views:482},
-      {id:'t2', rank:'#2', title:'Notion-style Notes App', desc:'A block-based note editor with slash commands, drag-to-reorder, and nested pages.', source:'6h ago', views:356},
-      {id:'t3', rank:'#3', title:'Restaurant Menu Builder', desc:'Interactive menu builder with category tabs, add-to-cart, and checkout flow. Mobile-first.', source:'12h ago', views:291},
-      {id:'t4', rank:'#4', title:'Fitness Tracker', desc:'Workout logger with progress charts, streak counter, and achievement badges. Dark mode.', source:'1d ago', views:234},
-      {id:'t5', rank:'#5', title:'Travel Booking Flow', desc:'Multi-step booking wizard: search, filters, results, detail, checkout. Map integration.', source:'1d ago', views:198},
-    ];
-
-    function renderPrompts(filter){
-      const grid = document.getElementById('promptGrid');
-      const filtered = filter === 'all' ? PROMPTS : PROMPTS.filter(p => p.category === filter);
-      const search = document.getElementById('searchInput').value.toLowerCase();
-      const final = search ? filtered.filter(p => p.title.toLowerCase().includes(search) || p.text.toLowerCase().includes(search) || p.tags.some(t => t.toLowerCase().includes(search))) : filtered;
-      grid.innerHTML = final.map(p => \`
-        <div class="prompt-card" data-prompt="\${p.text.replace(/"/g, '&quot;')}">
-          <div class="tag">\${p.category.toUpperCase()}</div>
-          <h3>\${p.title}</h3>
-          <p>\${p.text}</p>
-          <div class="meta">
-            <span><span style="color:var(--teal)">&#9679;</span> \${p.difficulty}</span>
-            <span>\${p.uses} uses</span>
-          </div>
-          <div class="launch">&#8599;</div>
-        </div>
-      \`).join('');
-      document.querySelectorAll('.prompt-card').forEach(card => {
-        card.addEventListener('click', () => {
-          const prompt = card.getAttribute('data-prompt');
-          window.location.href = '/studio?prompt=' + encodeURIComponent(prompt);
-        });
-      });
-    }
-
-    function renderInterfaces(){
-      const grid = document.getElementById('featuredGrid');
-      grid.innerHTML = INTERFACES.map(i => \`
-        <div class="feat-card" data-prompt="\${i.desc.replace(/"/g, '&quot;')}">
-          <div class="thumb">
-            <div class="mini-frame">
-              <div class="mini-bar"><i></i><i></i><i></i></div>
-              <div class="mini-body">
-                <div class="mini-row"></div>
-                <div class="mini-row w"></div>
-                <div class="mini-grid"><div class="b"></div><div class="b"></div></div>
-                <div class="mini-row c"></div>
-                <div class="mini-row w"></div>
-              </div>
-            </div>
-          </div>
-          <div class="info">
-            <h3>\${i.title}</h3>
-            <p>\${i.desc}</p>
-            <div class="tags">\${i.tags.map(t => \`<span>\${t}</span>\`).join('')}</div>
-          </div>
-        </div>
-      \`).join('');
-      document.querySelectorAll('.feat-card').forEach(card => {
-        card.addEventListener('click', () => {
-          const prompt = card.getAttribute('data-prompt');
-          window.location.href = '/studio?prompt=' + encodeURIComponent(prompt);
-        });
-      });
-    }
-
-    function renderTrending(){
-      const grid = document.getElementById('trendingGrid');
-      grid.innerHTML = TRENDING.map(t => \`
-        <div class="trend-card" data-prompt="\${t.desc.replace(/"/g, '&quot;')}">
-          <div class="trend-num">\${t.rank}</div>
-          <h3>\${t.title}</h3>
-          <p>\${t.desc}</p>
-          <div class="trend-meta">
-            <span>\${t.source}</span>
-            <span>\${t.views} views</span>
-          </div>
-        </div>
-      \`).join('');
-      document.querySelectorAll('.trend-card').forEach(card => {
-        card.addEventListener('click', () => {
-          const prompt = card.getAttribute('data-prompt');
-          window.location.href = '/studio?prompt=' + encodeURIComponent(prompt);
-        });
-      });
-    }
-
-    // Tab switching
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('on'));
-        btn.classList.add('on');
-        renderPrompts(btn.getAttribute('data-tab'));
-      });
-    });
-
-    // Search
-    document.getElementById('searchInput').addEventListener('input', () => {
-      const activeTab = document.querySelector('.tab-btn.on').getAttribute('data-tab');
-      renderPrompts(activeTab);
-    });
-
-    renderPrompts('all');
-    renderInterfaces();
-    renderTrending();
   </script>
 </body>
 </html>

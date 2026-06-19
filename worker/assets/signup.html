@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Access Node — DipDesigns</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="glazier.css">
+
+  <!-- ===== PAGE (layout only) ===== -->
+  <style>
+  body{overflow-x:hidden;}
+  .bg{position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:radial-gradient(1000px 600px at 50% -10%,rgba(63,224,208,.10),transparent 60%),
+    radial-gradient(760px 680px at 88% 6%,rgba(246,169,59,.06),transparent 58%),
+    radial-gradient(820px 720px at 10% 110%,rgba(36,75,110,.28),transparent 60%),
+    linear-gradient(180deg,var(--bg-base),var(--bg-void));}
+  .bg::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(120,170,210,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(120,170,210,.045) 1px,transparent 1px);background-size:46px 46px;-webkit-mask-image:radial-gradient(circle at 50% 40%,#000 22%,transparent 76%);mask-image:radial-gradient(circle at 50% 40%,#000 22%,transparent 76%);}
+  .auth-wrap{position:relative;z-index:2;min-height:100vh;display:grid;place-items:center;padding:24px;}
+  .stack{width:100%;max-width:418px;}
+  .node{padding:11px;border-radius:26px;}
+  .screen{background:linear-gradient(165deg,#0c1420,#070b12);border:1px solid rgba(0,0,0,.5);border-radius:18px;box-shadow:inset 0 2px 16px rgba(0,0,0,.6);padding:26px 26px 24px;color:var(--ink-on-dark);}
+  .node-bar{display:flex;align-items:center;gap:10px;margin-bottom:22px;}
+  .node-bar .ttl{font-family:var(--font-mono);font-weight:700;letter-spacing:2px;font-size:12px;color:var(--ink-on-dark);}
+  .node-bar .meta{margin-left:auto;font-family:var(--font-mono);font-size:10px;letter-spacing:1px;color:var(--amber);display:inline-flex;align-items:center;gap:6px;}
+  .node-bar .meta i{width:5px;height:5px;border-radius:50%;background:var(--amber);box-shadow:0 0 8px var(--amber-soft);}
+  h1{font-size:23px;font-weight:800;margin:0 0 6px;letter-spacing:-.4px;
+     color:var(--amber);
+     background:linear-gradient(120deg,var(--ember),var(--amber));
+     -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+  .sub{color:var(--ink-on-dark-dim);font-size:13px;line-height:1.55;margin:0 0 22px;}
+  .glz-btn + .glz-btn{margin-top:10px;}
+  .glz-divider{margin:20px 0 14px;}
+  .email-row{display:flex;gap:8px;}
+  .email-row .glz-field{flex:1;}
+  .email-row .glz-btn{flex-shrink:0;padding:13px 14px;font-size:12px;}
+  .soon{font-family:var(--font-mono);font-size:10px;color:var(--ink-on-dark-dim);margin:8px 0 0;text-align:center;letter-spacing:.5px;}
+  .security{display:flex;gap:8px;align-items:flex-start;margin:22px 0 0;font-size:11px;line-height:1.5;color:var(--ink-on-dark-dim);font-family:var(--font-mono);}
+  .security svg{width:14px;height:14px;flex-shrink:0;margin-top:1px;color:var(--amber);}
+  .cap{text-align:center;font-family:var(--font-mono);font-size:11px;color:var(--ink-on-dark-dim);margin:18px 0 0;}
+  .cap b{color:var(--teal);font-weight:400;}
+  </style>
+</head>
+<body class="glz-body">
+  <div class="bg"></div>
+  <svg class="glz-electric-line" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true" style="z-index:1;">
+    <path d="M-40,230 C 320,150 540,360 760,300 S 1180,180 1500,260"/>
+    <path class="glz-slow" d="M-40,700 C 360,780 560,520 780,610 S 1180,760 1500,650"/>
+  </svg>
+
+  <main class="auth-wrap">
+    <div class="stack">
+      <section class="node glz-surface-metal" aria-label="Sign in">
+        <div class="screen">
+          <div class="node-bar">
+            <span class="glz-node-dot" aria-hidden="true"></span>
+            <span class="ttl">ACCESS NODE</span>
+            <span class="meta"><i></i>SECURE · OAUTH</span>
+          </div>
+
+          <h1>Create your account</h1>
+          <p class="sub">Join the beta — get early access to AI-generated UI components..</p>
+
+          <button class="glz-btn glz-btn-primary glz-btn-block" id="gh">
+            <svg viewBox="0 0 24 24" fill="#04201d"><path d="M12 .5a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.3-1.8-1.3-1.8-1.1-.7 0-.7 0-.7 1.2 0 1.9 1.2 1.9 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2 0-.4-.5-1.6.2-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.7 1.6.2 2.8.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .5Z"/></svg>
+            Continue with GitHub
+          </button>
+          <button class="glz-btn glz-btn-block" id="go">
+            <svg viewBox="0 0 24 24"><path fill="#EA4335" d="M12 11v3.8h5.3c-.2 1.4-1.6 4-5.3 4a5.8 5.8 0 0 1 0-11.6c1.8 0 3 .8 3.7 1.4l2.5-2.4A9 9 0 1 0 12 21c5.2 0 8.6-3.6 8.6-8.7 0-.6 0-1-.2-1.3H12Z"/></svg>
+            Continue with Google
+          </button>
+
+          <div class="glz-divider">Sign in with your account</div>
+          <div class="email-row">
+            <input class="glz-field" id="email" type="email" placeholder="you@studio.dev" autocomplete="email" spellcheck="false">
+            <button class="glz-btn glz-btn-metal" id="notify">Sign In</button>
+          </div>
+          <p class="soon" id="notifyMsg">Enter your email to sign in or sign up.</p>
+
+          <p class="security">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+            Your email is never shared or exposed. OAuth tokens are scoped read-only — exactly enough to identify you and protect your routing addresses.
+          </p>
+        </div>
+      </section>
+      <p class="cap">Backed by <b>GitHub</b> &amp; <b>Google</b> OAuth · part of DipDesigns</p>
+    </div>
+  </main>
+
+  <script>
+    function workerBase(){ return (localStorage.getItem('webhooks_email_worker') || window.location.origin).replace(/\/+$/, ''); }
+    function startOAuth(p){ window.location.href = workerBase() + '/api/auth/' + p + '?redirect=' + encodeURIComponent('/'); }
+    document.getElementById('gh').onclick = function(){ startOAuth('github'); };
+    document.getElementById('go').onclick = function(){ startOAuth('google'); };
+    document.getElementById('notify').onclick = function(){
+      var e = document.getElementById('email').value.trim();
+      var msg = document.getElementById('notifyMsg');
+      if (e && /.+@.+\..+/.test(e)) { msg.textContent = '\u2713 Check your email for a sign-in link.'; msg.style.color = 'var(--teal)'; }
+      else { msg.textContent = 'Enter a valid email to join the magic-link waitlist.'; msg.style.color = 'var(--amber)'; }
+    };
+  
+    // Store email for beta list before OAuth redirect
+    async function storeEmailForBeta(email) {
+      try {
+        await fetch('/api/beta-signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, source: 'signup_page', timestamp: Date.now() })
+        });
+      } catch (e) { console.log('Beta email stored locally'); }
+    }
+</script>
+</body>
+</html>

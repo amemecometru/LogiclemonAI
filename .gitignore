@@ -23,3 +23,6 @@ OPENCODE-HANDOFF.md/
 worker/.wrangler/
 stripe-logiclemoai
 .dev.vars
+catchup-kimi.md
+dns-record
+worker/assets/fix.py
