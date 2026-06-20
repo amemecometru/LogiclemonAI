@@ -59,7 +59,7 @@
           <div class="node-bar">
             <span class="glz-node-dot" aria-hidden="true"></span>
             <span class="ttl">ACCESS NODE</span>
-            <span class="meta"><i></i>SECURE · OAUTH</span>
+            <span class="meta" style="display:flex;gap:10px;"><a href="/" style="color:var(--ink-on-dark-dim);text-decoration:none;">← Home</a><i></i>SECURE · OAUTH</span>
           </div>
 
           <h1>Sign in to your studio</h1>
@@ -93,7 +93,7 @@
 
   <script>
     function workerBase(){ return (localStorage.getItem('webhooks_email_worker') || window.location.origin).replace(/\/+$/, ''); }
-    function startOAuth(p){ window.location.href = workerBase() + '/api/auth/' + p + '?redirect=' + encodeURIComponent('/'); }
+    function startOAuth(p){ var r = '/studio'; var s = new URLSearchParams(window.location.search); if (s.get('redirect')) r = s.get('redirect'); window.location.href = workerBase() + '/api/auth/' + p + '?redirect=' + encodeURIComponent(r); }
     document.getElementById('gh').onclick = function(){ startOAuth('github'); };
     document.getElementById('go').onclick = function(){ startOAuth('google'); };
     document.getElementById('notify').onclick = function(){

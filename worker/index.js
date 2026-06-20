@@ -41,6 +41,20 @@ The JSON must have this exact structure:
 }
 Generate a clean, responsive UI based on the user's request. Use modern CSS (flexbox/grid). Be creative but practical. Keep it simple — single-file output, no external dependencies.`;
 
+const BACKEND_ASSISTANT_SYSTEM_PROMPT = `You are a Backend AI Assistant for DipDesigns Studio — a UI prototyping tool. Your job is to help developers plan the backend implementation for their frontend design.
+
+Assist with:
+- Backend architecture decisions
+- Data models and schemas
+- API route design (REST/GraphQL)
+- Authentication and authorization strategies
+- Database choices and migrations
+- Deployment and hosting
+- Environment variables and configuration
+- Integration points with the frontend
+
+When a target stack is specified, tailor advice to that stack's idioms and best practices. Be concise and practical. Provide code snippets when helpful. Ask clarifying questions to understand the user's needs better. The conversation builds toward generating a comprehensive backend-handoff.md document.`;
+
 function corsHeaders(origin) {
   const allowed = CONFIG.ALLOWED_ORIGINS.some(p => {
     if (p.endsWith('*')) return origin?.startsWith(p.slice(0, -1));
@@ -80,14 +94,22 @@ async function issueOrGetUser(env, email, provider) {
   const e = (email || '').toLowerCase().trim();
   if (env.WEBHOOKS_KV) {
     const existing = await env.WEBHOOKS_KV.get('user:email:' + e, 'json');
-    if (existing && existing.wekKey) return existing;
+    if (existing && existing.wekKey) {
+      const p = existing.principal || await generatePrincipalHash(existing.wekKey);
+      const wekCheck = await env.WEBHOOKS_KV.get('wek:' + p, 'json');
+      if (!wekCheck) {
+        await env.WEBHOOKS_KV.put('wek:' + p, JSON.stringify({ email: e, provider }));
+      }
+      existing.principal = p;
+      return existing;
+    }
   }
   const wekKey = 'wek_' + randomToken(32);
   const principal = await generatePrincipalHash(wekKey);
   const record = { email: e, provider, wekKey, principal, createdAt: Date.now() };
   if (env.WEBHOOKS_KV) {
     await env.WEBHOOKS_KV.put('user:email:' + e, JSON.stringify(record));
-    await env.WEBHOOKS_KV.put('wek:' + principal, JSON.stringify({ email: e, provider, createdAt: record.createdAt }));
+    await env.WEBHOOKS_KV.put('wek:' + principal, JSON.stringify({ email: e, provider }));
   }
   return record;
 }
@@ -146,6 +168,31 @@ async function doLedgerAction(ledger, action, body) {
     body: JSON.stringify(body || {}),
   });
   return res.json();
+}
+
+async function callBackendAssistant(prompt, systemPrompt, model, env) {
+  const resp = await fetch(CONFIG.OPENROUTER_BASE + '/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + (env.OPENROUTER_API_KEY || CONFIG.OPENROUTER_API_KEY),
+      'Content-Type': 'application/json',
+      'HTTP-Referer': 'https://workers.dipdesigns.app',
+      'X-Title': 'DipDesigns - Backend Assistant',
+    },
+    body: JSON.stringify({
+      model: model || CONFIG.FREE_MODEL,
+      messages: [
+        { role: 'system', content: systemPrompt || '' },
+        { role: 'user', content: prompt },
+      ],
+    }),
+  });
+  if (!resp.ok) {
+    const err = await resp.text();
+    throw new Error('OpenRouter: ' + err);
+  }
+  const data = await resp.json();
+  return { text: data.choices?.[0]?.message?.content || '' };
 }
 
 function parseGemmaResponse(content) {
@@ -285,6 +332,27 @@ async function handleFreeGenerate(request, cors, env) {
 
     const parsed = await callOpenRouter(prompt, FREE_SYSTEM_PROMPT, CONFIG.FREE_MODEL, env);
     return new Response(JSON.stringify({ ...parsed, free: true, remaining: freeRemaining }), {
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache', ...cors },
+    });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500, headers: { 'Content-Type': 'application/json', ...cors },
+    });
+  }
+}
+
+async function handleBackendAssistant(request, cors, env) {
+  try {
+    const body = await request.json();
+    const { prompt, stack } = body;
+    if (!prompt) {
+      return new Response(JSON.stringify({ error: 'prompt is required' }), {
+        status: 400, headers: { 'Content-Type': 'application/json', ...cors },
+      });
+    }
+    const stackNote = stack && stack !== 'agnostic' ? `\n[Target stack set to: ${stack}]` : '';
+    const result = await callBackendAssistant(prompt + stackNote, BACKEND_ASSISTANT_SYSTEM_PROMPT, null, env);
+    return new Response(JSON.stringify(result), {
       headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache', ...cors },
     });
   } catch (err) {
@@ -527,7 +595,8 @@ async function handleOAuth(request, url, env) {
 
     const user = await issueOrGetUser(env, email, provider);
     const wekKey = user.wekKey;
-    const authRedirect = appRedirect + (appRedirect.includes('?') ? '&' : '?') + 'auth=' + wekKey;
+    const redirectBase = appRedirect.startsWith('http') ? appRedirect : baseUrl + appRedirect;
+    const authRedirect = redirectBase + (redirectBase.includes('?') ? '&' : '?') + 'auth=' + wekKey;
     return Response.redirect(authRedirect, 302);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { 'Content-Type': 'application/json', ...cors } });
@@ -718,6 +787,9 @@ export default {
         break;
       case '/api/free-generate':
         if (request.method === 'POST') return handleFreeGenerate(request, cors, env);
+        break;
+      case '/api/backend-assistant':
+        if (request.method === 'POST') return handleBackendAssistant(request, cors, env);
         break;
       case '/api/webhook':
         if (request.method === 'POST') return handleWebhook(request, cors, env);

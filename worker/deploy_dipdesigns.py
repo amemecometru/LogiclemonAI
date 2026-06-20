@@ -68,6 +68,7 @@ print(json.dumps(result, indent=2))
 
 if result.get("success", False):
     print(f"\n✅ {SCRIPT_NAME} deployed successfully!")
+    print(f"   https://dipdesigns.app")
 else:
     print(f"\n❌ Deploy to {SCRIPT_NAME} failed.")
     errors = result.get("errors", [])

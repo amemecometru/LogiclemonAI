@@ -819,6 +819,21 @@ window.addEventListener('unhandledrejection', function(e) {
     ], { signal });
   }
 
+  var VIBE_EXPANSIONS = [
+    {keywords:['dashboard','analytics','kpi','metrics','chart'], prompt:'Build a dark analytics dashboard with a fixed 240px left sidebar (nav items: Overview, Analytics, Reports, Settings with teal active indicator), a top header bar with a search input and user avatar, and four KPI metric cards in a 2x2 grid (Total Revenue $284.5k, Active Users 12,847, Conversion Rate 3.24%, Avg Session 4m 32s). Below the KPIs, place a full-width line chart showing 30 days of revenue with a gradient fill under the line (teal color). Below the chart, add a full-width data table with sortable column headers and striped rows. Use dark background #070b12, card surfaces #0f1724, text #e8edf5. Responsive: on mobile the sidebar collapses to hamburger, KPIs stack. Use system-ui sans-serif. All content realistic sample data.'},
+    {keywords:['landing','hero','marketing','page'], prompt:'Build a dark creative landing page with a full-viewport hero section with a large bold headline (56px, 900 weight), a subheadline in muted text, and two CTA buttons (teal filled and outlined). Below the hero, a feature grid of 6 cards in a 2x3 grid showing different capabilities with icons. Add a testimonials section with horizontal scrolling cards containing quotes, author names, and titles. Finally, a contact section with a form (name, email, message) and a teal submit button. Use dark background #070b12, surfaces #0f1724, teal accent #3fe0d0, system-ui font. Responsive layout. All content realistic sample data.'},
+    {keywords:['chat','messaging','ai','assistant'], prompt:'Build a full-featured dark AI chat interface. Layout: header bar with "AI Assistant" title and a "New Chat" button. Scrollable message list with user messages right-aligned teal bubbles, assistant messages left-aligned dark bubbles with support for code blocks with copy button and bullet lists. Typing indicator with three animated teal dots. Input area with multi-line textarea (max 4 rows) and teal send button. Include 6 sample messages. Use dark background #070b12, system-ui font, auto-scroll to bottom. Mobile responsive.'},
+    {keywords:['pricing','saas','tiers','plan'], prompt:'Build a dark SaaS pricing page with three tier cards (Starter $29/mo, Pro $79/mo, Enterprise Custom) side by side. Monthly/annual toggle that shows 20% discount on annual with a "Save 20%" badge. Each card: tier name, price, bullet feature list with teal checkmarks, CTA button. Middle Pro card elevated with teal border glow and "Most Popular" badge. FAQ section with 4 expandable accordion items below. Use #070b12 background, #0f1724 cards, teal #3fe0d0 accent. System-ui font. Realistic sample data.'},
+    {keywords:['login','signin','signup','auth','modal','form'], prompt:'Build a sleek dark authentication modal (centered, max-width 420px, glass-morphism card with backdrop-filter: blur(16px)) on a dimmed overlay. Tab toggle at top to switch between Login and Signup with sliding teal underline indicator. Login: email, password with show/hide toggle, "Remember me" checkbox, teal "Sign In" button. Signup: name, email, password with strength bar, confirm password, terms checkbox, teal "Create Account" button. Divider with GitHub and Google social buttons. Smooth slide/fade transitions. Use dark theme #070b12, teal #3fe0d0 focus glow on inputs. System-ui font.'},
+    {keywords:['ecommerce','product','shop','store','grid'], prompt:'Build a dark e-commerce product listing page. Left sidebar with category checkboxes (8 categories), price range slider, and "Clear Filters". Top header with result count, sort dropdown, and grid/list toggle. Product cards in 3-column grid with: image area, sale badge in amber, product name, price with strikethrough discount in teal, 5-star rating, and "Add to Cart" button. Pagination at bottom. Cards have hover zoom effect. Use #070b12 background, #0f1724 cards, teal #3fe0d0 accent. Responsive 3/2/1 columns.'},
+    {keywords:['kanban','board','project','task'], prompt:'Build a dark kanban board with three columns: "To Do" (amber header), "In Progress" (teal header), "Done" (green header). Each column has a semi-transparent dark background #0f1724, count badge, and 4-6 task cards. Cards have: priority label (Urgent red, High orange, Medium amber, Low gray), task title, 2-line description, assignee avatars, date badge, and tag label. Subtle hover effects. Header with board title "Sprint 24", "Add Card" button, filter dropdown. Activity feed below with 5 recent actions. Responsive. Use system-ui font.'},
+    {keywords:['settings','profile','account','preferences'], prompt:'Build a comprehensive dark settings page with sidebar tab navigation (Profile, Account, Notifications, Appearance, Billing) with teal active indicator. Profile: avatar upload, name, email (verified badge), bio, save button. Account: username, 2FA toggle, delete account in red. Notifications: 6 toggle switches for email and push alerts. Appearance: dark/light theme preview cards, font size slider, accent color picker (6 presets). Billing: current plan card, payment method, billing history table. Use #070b12 background, #0f1724 surfaces, teal #3fe0d0. System-ui font.'},
+    {keywords:['portfolio','creative','agency'], prompt:'Build a creative agency portfolio page. Full-viewport hero with "We build digital experiences" headline (56px, 900 weight), subheadline, two CTAs (teal filled + outlined), animated gradient mesh background. "Selected Work" grid of 6 project cards with gradient thumbnails, title, category tag, hover lift effect. Client testimonials horizontal scroll section with quote cards. Contact section with form (name, email, message) and teal submit button. Dark #070b12 background, system-ui font. Responsive.'},
+    {keywords:['calendar','events','schedule'], prompt:'Build a dark monthly calendar. Top nav with month label, left/right arrows, "Today" button. 7-column grid for day names. Day cells with number (current day teal circle), past/future dimmed. Event dots (teal meetings, amber deadlines, purple personal). Click day shows right slide-out panel with event list and "Add Event". Upcoming events horizontal list below. Use #070b12 background, #0f1724 surfaces, teal #3fe0d0. System-ui font. Responsive.'},
+    {keywords:['docs','api','documentation','reference'], prompt:'Build a dark API documentation page with three-column layout. Left sidebar (260px): API logo, endpoint search, collapsible groups (Authentication, Users, Projects, Webhooks, Analytics). Center: breadcrumb, endpoint name, HTTP method badge (GET teal, POST amber, DELETE red, PUT blue), description, "Try It" button, code example tabs (cURL, Python, JS, Ruby) with syntax coloring and copy button, response accordion. Right sidebar: Parameters table, Responses section with status code cards. Dark #070b12, monospace for code. Realistic sample REST API data.'},
+    {keywords:['music','player','media','audio'], prompt:'Build a dark music player interface. Left sidebar with logo, library nav (Playlists, Artists, Albums, Songs, Podcasts), "Create Playlist" button. Center: album art (gradient square with play overlay), track list (8 songs with title, artist, album, duration, heart icon). Bottom: persistent player bar with thumbnail, title, playback controls (shuffle, prev, play/pause, next, repeat), seek bar, volume slider, queue toggle. Teal play button. Use dark gradient #0f0f1a, glass surfaces with backdrop-filter: blur(20px). Responsive.'},
+  ];
+
   async function executeSkillChain(userPrompt, signal) {
     if (CONFIG.isProxyMode || isFreeMode()) {
       showStatus(isFreeMode() ? 'Generating (free)...' : 'Generating via dipdesigns.app...');
@@ -833,6 +848,21 @@ window.addEventListener('unhandledrejection', function(e) {
     return merged;
   }
 
+  function expandVibe(input) {
+    var w = input.toLowerCase().split(/\s+/).filter(Boolean);
+    if (w.length > 15) return input;
+    var matched = null;
+    for (var i = 0; i < VIBE_EXPANSIONS.length; i++) {
+      var e = VIBE_EXPANSIONS[i];
+      for (var j = 0; j < e.keywords.length; j++) {
+        if (input.toLowerCase().indexOf(e.keywords[j]) !== -1) { matched = e; break; }
+      }
+      if (matched) break;
+    }
+    if (matched) return matched.prompt;
+    return 'Build a complete, polished, responsive dark-themed UI page for: ' + input + '. Include appropriate layout, navigation, content sections, and interactive elements suited to the description. Use a dark background with teal accents.';
+  }
+
   async function sendPrompt(prompt) {
     if (!prompt.trim()) return;
     if (!CONFIG.apiKey && getFreeRemaining() <= 0) {
@@ -840,6 +870,8 @@ window.addEventListener('unhandledrejection', function(e) {
       showKeyModal();
       return;
     }
+
+    prompt = expandVibe(prompt);
 
     dom.sendBtn.disabled = true;
     abortController = new AbortController();
@@ -1035,6 +1067,7 @@ window.addEventListener('unhandledrejection', function(e) {
   }));
   document.addEventListener('click', (e) => { if (dom.devicePod && !dom.devicePod.contains(e.target)) closeDevicePod(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeDevicePod(); closeExportPod(); } });
+  if (window.innerWidth < 900) setDevice('mobile');
 
   // --- Export pod (Slice 3) — download, copy, send-to-desktop, handoff.md ---
   function closeExportPod() {
@@ -1416,12 +1449,118 @@ window.addEventListener('unhandledrejection', function(e) {
       updateStatus('connected');
     }
 
+    // Inspiration prompt (?prompt=...): auto-send when landing from inspiration page
+    const promptParam = new URLSearchParams(window.location.search).get('prompt');
+    if (promptParam) {
+      const p = new URLSearchParams(window.location.search);
+      p.delete('prompt');
+      const qs = p.toString();
+      const clean = window.location.pathname + (qs ? '?' + qs : '') + window.location.hash;
+      window.history.replaceState({}, document.title, clean);
+      setTimeout(function(){
+        dom.promptInput.value = promptParam;
+        dom.promptInput.style.height = 'auto';
+        sendPrompt(promptParam);
+      }, 100);
+    }
+
     const savedDesktopKey = localStorage.getItem('webhooks_email_desktop_key');
     if (savedDesktopKey) desktopKey = savedDesktopKey;
     const savedIp = localStorage.getItem('webhooks_email_desktop_ip');
     if (savedIp) setDesktopIP(savedIp);
     refreshFreeStatus();
     refreshAuthUI();
+
+    // Mobile: chat panel starts collapsed, tap to expand, tap outside or send to collapse
+    if (window.innerWidth < 900) {
+      var chatPanel = document.querySelector('.panel-chat');
+      var previewCanvas = document.getElementById('previewCanvas');
+      function collapseChat(){ if(chatPanel) chatPanel.classList.add('collapsed'); }
+      function expandChat(){ if(chatPanel) chatPanel.classList.remove('collapsed'); }
+      if(chatPanel) chatPanel.classList.add('collapsed');
+      if(chatPanel) chatPanel.addEventListener('click', function(e){ if(chatPanel.classList.contains('collapsed')) expandChat(); });
+      if(dom.promptInput) dom.promptInput.addEventListener('focus', expandChat);
+      if(previewCanvas) previewCanvas.addEventListener('click', collapseChat);
+      // Expand when message arrives
+      var origAddMsg = addMessage;
+      addMessage = function(txt, role){
+        origAddMsg(txt, role);
+        if(role !== 'error') expandChat();
+      };
+      // Vibe chips: tap to auto-fill and send
+      var vibeChips = document.getElementById('vibeChips');
+      if (vibeChips) {
+        vibeChips.addEventListener('click', function(e){
+          var chip = e.target.closest('.vibe-chip');
+          if (!chip) return;
+          var vibe = chip.dataset.vibe;
+          if (!vibe) return;
+          var vibePrompts = {
+            dashboard:'a dark analytics dashboard with charts and stats',
+            landing:'a modern landing page for a SaaS product',
+            chat:'a dark AI chat interface with message bubbles',
+            pricing:'a pricing page with three tiers and a comparison table',
+            auth:'a login and signup page with social auth buttons',
+            ecommerce:'a product listing page with a shopping cart',
+            kanban:'a kanban board with drag and drop columns',
+            settings:'a settings page with tabs and toggles',
+            portfolio:'a creative portfolio page with projects grid',
+            calendar:'a calendar with events and a day view',
+            docs:'a documentation page with sidebar navigation',
+            music:'a music player interface with playlist'
+          };
+          dom.promptInput.value = vibePrompts[vibe] || vibe;
+          dom.promptInput.style.height = 'auto';
+          expandChat();
+          sendPrompt(dom.promptInput.value);
+        });
+      }
+      // Mic button: speech-to-text via Web Speech API
+      var micBtn = document.getElementById('micBtn');
+      if (micBtn && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+        var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        var recognition = new SpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.interimResults = true;
+        recognition.continuous = true;
+        var recording = false;
+        micBtn.addEventListener('click', function(e){
+          e.stopPropagation();
+          if (recording) {
+            recognition.stop();
+            return;
+          }
+          try {
+            recognition.start();
+            recording = true;
+            micBtn.classList.add('recording');
+            micBtn.title = 'Stop recording';
+          } catch(err) { recording = false; }
+        });
+        recognition.onresult = function(e){
+          var transcript = '';
+          for (var i = e.resultIndex; i < e.results.length; i++) {
+            transcript += e.results[i][0].transcript;
+          }
+          dom.promptInput.value = transcript;
+          dom.promptInput.style.height = 'auto';
+        };
+        recognition.onend = function(){
+          recording = false;
+          micBtn.classList.remove('recording');
+          micBtn.title = 'Voice input';
+          if (dom.promptInput.value.trim()) expandChat();
+        };
+        recognition.onerror = function(){
+          recording = false;
+          micBtn.classList.remove('recording');
+          micBtn.title = 'Voice input';
+        };
+      } else if (micBtn) {
+        micBtn.style.display = 'none';
+      }
+    }
+
   });
 
   window.DipDesigns = {

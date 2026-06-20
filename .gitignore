@@ -25,4 +25,8 @@ stripe-logiclemoai
 .dev.vars
 catchup-kimi.md
 dns-record
-worker/assets/fix.py
+worker/assets-inline.js
+assets-inline.js
+worker/cf-problem
+clawhub-skill/
+backend-handoff/
