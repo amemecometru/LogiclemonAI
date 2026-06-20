@@ -832,6 +832,7 @@ window.addEventListener('unhandledrejection', function(e) {
     {keywords:['calendar','events','schedule'], prompt:'Build a dark monthly calendar. Top nav with month label, left/right arrows, "Today" button. 7-column grid for day names. Day cells with number (current day teal circle), past/future dimmed. Event dots (teal meetings, amber deadlines, purple personal). Click day shows right slide-out panel with event list and "Add Event". Upcoming events horizontal list below. Use #070b12 background, #0f1724 surfaces, teal #3fe0d0. System-ui font. Responsive.'},
     {keywords:['docs','api','documentation','reference'], prompt:'Build a dark API documentation page with three-column layout. Left sidebar (260px): API logo, endpoint search, collapsible groups (Authentication, Users, Projects, Webhooks, Analytics). Center: breadcrumb, endpoint name, HTTP method badge (GET teal, POST amber, DELETE red, PUT blue), description, "Try It" button, code example tabs (cURL, Python, JS, Ruby) with syntax coloring and copy button, response accordion. Right sidebar: Parameters table, Responses section with status code cards. Dark #070b12, monospace for code. Realistic sample REST API data.'},
     {keywords:['music','player','media','audio'], prompt:'Build a dark music player interface. Left sidebar with logo, library nav (Playlists, Artists, Albums, Songs, Podcasts), "Create Playlist" button. Center: album art (gradient square with play overlay), track list (8 songs with title, artist, album, duration, heart icon). Bottom: persistent player bar with thumbnail, title, playback controls (shuffle, prev, play/pause, next, repeat), seek bar, volume slider, queue toggle. Teal play button. Use dark gradient #0f0f1a, glass surfaces with backdrop-filter: blur(20px). Responsive.'},
+    {keywords:['breakfree','vanilla','standalone','nodeps','clean','bare'], prompt:'SkillChain BREAK FREE mode. Generate a complete standalone UI with ZERO external dependencies — no npm packages, no CDN links, no frameworks (no React, no Vue, no Tailwind, no Bootstrap), no build tools, no package.json. Pure semantic HTML5, handcrafted vanilla CSS (no preprocessors), and plain JavaScript (no TypeScript compilation, no JSX). Everything self-contained in a single HTML file with inline <style> and <script>. Use the provided design tokens for colors (dark backgrounds, teal accents). The output must work when opened directly from disk (file:// protocol) — no server needed. This is deliberately minimal and dependency-free so it NEVER breaks due to version changes or config issues.'},
   ];
 
   async function executeSkillChain(userPrompt, signal) {
@@ -871,11 +872,13 @@ window.addEventListener('unhandledrejection', function(e) {
       return;
     }
 
+    var originalPrompt = prompt;
     prompt = expandVibe(prompt);
 
     dom.sendBtn.disabled = true;
     abortController = new AbortController();
-    addMessage(prompt, 'user');
+    var wasExpanded = prompt !== originalPrompt;
+    addMessage(wasExpanded ? '\u2726 Expanded: ' + prompt : prompt, 'user');
     dom.promptInput.value = '';
     dom.promptInput.style.height = 'auto';
 
@@ -1035,7 +1038,20 @@ window.addEventListener('unhandledrejection', function(e) {
   if (dom.zoomInBtn) dom.zoomInBtn.addEventListener('click', () => zoomStep(1));
   if (dom.zoomOutBtn) dom.zoomOutBtn.addEventListener('click', () => zoomStep(-1));
   if (dom.zoomValue) dom.zoomValue.addEventListener('click', () => fitToWidth()); // % readout doubles as Fit
-  window.addEventListener('resize', () => { if (zoomMode === 'fit') fitToWidth(); });
+  window.addEventListener('resize', function() {
+    if (zoomMode === 'fit') fitToWidth();
+    // Re-evaluate auto-device when crossing 900px boundary
+    var wasMobile = document.body.classList.contains('auto-mobile');
+    var isMobile = window.innerWidth < 900;
+    if (isMobile && !wasMobile) {
+      document.body.classList.add('auto-mobile');
+      setDevice('mobile');
+    } else if (!isMobile && wasMobile) {
+      document.body.classList.remove('auto-mobile');
+      // Only revert if user didn't manually select mobile
+      if (currentDevice === 'mobile' || currentDevice === 'tablet') setDevice('laptop');
+    }
+  });
 
   // --- Device pod (Slice 2.1) — conceal/expand picker; replaces the inline Desktop/Mobile toolbar buttons ---
   function setDevice(d) {
@@ -1067,7 +1083,7 @@ window.addEventListener('unhandledrejection', function(e) {
   }));
   document.addEventListener('click', (e) => { if (dom.devicePod && !dom.devicePod.contains(e.target)) closeDevicePod(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeDevicePod(); closeExportPod(); } });
-  if (window.innerWidth < 900) setDevice('mobile');
+  if (window.innerWidth < 900) { document.body.classList.add('auto-mobile'); setDevice('mobile'); }
 
   // --- Export pod (Slice 3) — download, copy, send-to-desktop, handoff.md ---
   function closeExportPod() {
@@ -1122,69 +1138,11 @@ window.addEventListener('unhandledrejection', function(e) {
     }
   }
 
-  function generateHandoff() {
-    if (!lastResult) { addMessage('Nothing to export — generate a UI first.', 'error'); return; }
-    const data = lastResult;
-    const htmlLen = (data.html || '').length;
-    const cssLen = (data.css || '').length;
-    const jsLen = (data.js || '').length;
-    const totalLen = htmlLen + cssLen + jsLen;
-    const prompt = lastPrompt || '(not recorded)';
-    const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
-    const model = CONFIG.model || 'unknown';
-
-    let md = '# Implementation Handoff\n\n';
-    md += '> Auto-generated by dipdesigns.app Export · ' + now + '\n';
-    md += '> Model: `' + model + '`\n\n';
-    md += '## Source Prompt\n\n';
-    md += '```\n' + prompt + '\n```\n\n';
-    md += '## Generated Output Summary\n\n';
-    md += '| Component | Size |\n';
-    md += '|-----------|------|\n';
-    md += '| HTML      | ' + htmlLen + ' chars |\n';
-    md += '| CSS       | ' + cssLen + ' chars |\n';
-    md += '| JS        | ' + jsLen + ' chars |\n';
-    md += '| **Total** | **' + totalLen + ' chars** |\n\n';
-    md += '## Architecture\n\n';
-    md += '- **Rendering**: Client-side blob URL → sandboxed iframe\n';
-    md += '- **Self-healing**: Up to ' + MAX_REPAIRS + ' auto-repair attempts on runtime errors\n';
-    md += '- **Design system**: Copper/patina tokens (see DESIGN/ packages)\n';
-    md += '- **SkillChain**: architect → styler → engineer (3-step pipeline)\n\n';
-    md += '## Integration Instructions\n\n';
-    md += '### Option A — Standalone HTML file\n\n';
-    md += 'Save the downloaded HTML file as-is. Self-contained with inline CSS and JS.\n\n';
-    md += '```bash\npython3 -m http.server 8080\n# Open http://localhost:8080/webhooks-ui.html\n```\n\n';
-    md += '### Option B — Extract into a project\n\n';
-    md += '```\nproject/\n├── index.html    # HTML block below\n├── styles.css    # CSS block below\n└── app.js        # JS block below\n```\n\n';
-    md += '### Option C — Embed in existing app\n\n';
-    md += 'Use as an iframe embed or extract components into your framework.\n\n';
-    md += '---\n\n';
-    md += '## Generated HTML\n\n';
-    md += '```html\n' + (data.html || '') + '\n```\n\n';
-    md += '## Generated CSS\n\n';
-    md += '```css\n' + (data.css || '') + '\n```\n\n';
-    md += '## Generated JS\n\n';
-    md += '```javascript\n' + (data.js || '') + '\n```\n\n';
-    md += '---\n\n';
-    md += '*Generated by [workers.dipdesigns.app](https://dipdesigns.app) — the AI design studio.*\n';
-
-    const blob = new Blob([md], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'HANDOFF-' + Date.now() + '.md';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 5000);
-    showToast('Handoff.md downloaded');
-  }
-
   const EXPORT_ACTIONS = {
     download: downloadHTML,
     copy: copyHTML,
     desktop: sendToDesktop,
-    handoff: generateHandoff,
+    handoff: function(){ if(window.openHandoffPanel) window.openHandoffPanel(); },
   };
 
   if (dom.exportItems) dom.exportItems.forEach(it => it.addEventListener('click', (e) => {
@@ -1471,94 +1429,97 @@ window.addEventListener('unhandledrejection', function(e) {
     refreshFreeStatus();
     refreshAuthUI();
 
-    // Mobile: chat panel starts collapsed, tap to expand, tap outside or send to collapse
-    if (window.innerWidth < 900) {
-      var chatPanel = document.querySelector('.panel-chat');
-      var previewCanvas = document.getElementById('previewCanvas');
-      function collapseChat(){ if(chatPanel) chatPanel.classList.add('collapsed'); }
-      function expandChat(){ if(chatPanel) chatPanel.classList.remove('collapsed'); }
+    // Chat collapse/expand (mobile only — starts collapsed)
+    var chatPanel = document.querySelector('.panel-chat');
+    var previewCanvas = document.getElementById('previewCanvas');
+    var isMobileLayout = function(){ return window.innerWidth < 900; };
+    if (isMobileLayout()) {
       if(chatPanel) chatPanel.classList.add('collapsed');
-      if(chatPanel) chatPanel.addEventListener('click', function(e){ if(chatPanel.classList.contains('collapsed')) expandChat(); });
-      if(dom.promptInput) dom.promptInput.addEventListener('focus', expandChat);
-      if(previewCanvas) previewCanvas.addEventListener('click', collapseChat);
-      // Expand when message arrives
-      var origAddMsg = addMessage;
-      addMessage = function(txt, role){
-        origAddMsg(txt, role);
-        if(role !== 'error') expandChat();
+    }
+    // These are defined unconditionally but only used on mobile
+    window.collapseChat = function(){ if(chatPanel && isMobileLayout()) chatPanel.classList.add('collapsed'); };
+    window.expandChat = function(){ if(chatPanel && isMobileLayout()) chatPanel.classList.remove('collapsed'); };
+    if(chatPanel) chatPanel.addEventListener('click', function(e){ if(chatPanel.classList.contains('collapsed')) window.expandChat(); });
+    if(dom.promptInput) dom.promptInput.addEventListener('focus', function(){ if(isMobileLayout()) window.expandChat(); });
+    if(previewCanvas) previewCanvas.addEventListener('click', function(){ if(isMobileLayout()) window.collapseChat(); });
+    // Expand only for user messages and assistant responses, not system/error
+    var origAddMsg = addMessage;
+    addMessage = function(txt, role){
+      origAddMsg(txt, role);
+      if(isMobileLayout() && (role === 'user' || role === 'assistant')) window.expandChat();
+    };
+    // Vibe chips: tap to auto-fill and send (works on all screen sizes)
+    var vibeChips = document.getElementById('vibeChips');
+    if (vibeChips) {
+      vibeChips.addEventListener('click', function(e){
+        var chip = e.target.closest('.vibe-chip');
+        if (!chip) return;
+        var vibe = chip.dataset.vibe;
+        if (!vibe) return;
+        var vibePrompts = {
+          dashboard:'dark analytics dashboard with KPI cards, line chart, data table, and sidebar navigation in teal on black',
+          landing:'SaaS landing page with gradient hero, feature grid with glass cards, pricing tier table, and neon teal CTA',
+          chat:'AI chat interface with streaming message bubbles, dark sidebar conversation list, and voice input button',
+          pricing:'three-tier SaaS pricing page with feature comparison table, annual/monthly toggle, and hover-lift cards',
+          auth:'login and signup modal with social auth buttons, glass card form, and animated background pattern',
+          ecommerce:'dark e-commerce product grid with filter sidebar, cart drawer, and hover-zoom product cards',
+          kanban:'project kanban board with draggable columns, task cards with avatars, and progress indicators',
+          settings:'settings panel with sidebar tab navigation, toggle switches, slider controls, and danger zone',
+          portfolio:'developer portfolio with full-bleed project grid, gradient hero, skills section, and contact form',
+          calendar:'dark monthly calendar with event dots, day-view slide panel, and upcoming events list',
+          docs:'API docs page with three-column layout, collapsible sidebar, HTTP method badges, and code samples',
+          music:'dark music player with album art, playlist sidebar, track list, and bottom persistent player bar',
+          breakfree:'break free from dependency hell — generate standalone vanilla HTML/CSS/JS with zero frameworks, zero npm, zero CDN, zero build tools'
+        };
+        dom.promptInput.value = vibePrompts[vibe] || vibe;
+        dom.promptInput.style.height = 'auto';
+        if(isMobileLayout()) window.expandChat();
+        sendPrompt(dom.promptInput.value);
+      });
+    }
+    // Mic button: speech-to-text via Web Speech API
+    var micBtn = document.getElementById('micBtn');
+    if (micBtn && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      var recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = true;
+      recognition.continuous = true;
+      var recording = false;
+      micBtn.addEventListener('click', function(e){
+        e.stopPropagation();
+        if (recording) {
+          recognition.stop();
+          return;
+        }
+        try {
+          recognition.start();
+          recording = true;
+          micBtn.classList.add('recording');
+          micBtn.title = 'Stop recording';
+        } catch(err) { recording = false; }
+      });
+      recognition.onresult = function(e){
+        var transcript = '';
+        for (var i = e.resultIndex; i < e.results.length; i++) {
+          transcript += e.results[i][0].transcript;
+        }
+        dom.promptInput.value = transcript;
+        dom.promptInput.style.height = 'auto';
       };
-      // Vibe chips: tap to auto-fill and send
-      var vibeChips = document.getElementById('vibeChips');
-      if (vibeChips) {
-        vibeChips.addEventListener('click', function(e){
-          var chip = e.target.closest('.vibe-chip');
-          if (!chip) return;
-          var vibe = chip.dataset.vibe;
-          if (!vibe) return;
-          var vibePrompts = {
-            dashboard:'a dark analytics dashboard with charts and stats',
-            landing:'a modern landing page for a SaaS product',
-            chat:'a dark AI chat interface with message bubbles',
-            pricing:'a pricing page with three tiers and a comparison table',
-            auth:'a login and signup page with social auth buttons',
-            ecommerce:'a product listing page with a shopping cart',
-            kanban:'a kanban board with drag and drop columns',
-            settings:'a settings page with tabs and toggles',
-            portfolio:'a creative portfolio page with projects grid',
-            calendar:'a calendar with events and a day view',
-            docs:'a documentation page with sidebar navigation',
-            music:'a music player interface with playlist'
-          };
-          dom.promptInput.value = vibePrompts[vibe] || vibe;
-          dom.promptInput.style.height = 'auto';
-          expandChat();
-          sendPrompt(dom.promptInput.value);
-        });
-      }
-      // Mic button: speech-to-text via Web Speech API
-      var micBtn = document.getElementById('micBtn');
-      if (micBtn && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-        var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        var recognition = new SpeechRecognition();
-        recognition.lang = 'en-US';
-        recognition.interimResults = true;
-        recognition.continuous = true;
-        var recording = false;
-        micBtn.addEventListener('click', function(e){
-          e.stopPropagation();
-          if (recording) {
-            recognition.stop();
-            return;
-          }
-          try {
-            recognition.start();
-            recording = true;
-            micBtn.classList.add('recording');
-            micBtn.title = 'Stop recording';
-          } catch(err) { recording = false; }
-        });
-        recognition.onresult = function(e){
-          var transcript = '';
-          for (var i = e.resultIndex; i < e.results.length; i++) {
-            transcript += e.results[i][0].transcript;
-          }
-          dom.promptInput.value = transcript;
-          dom.promptInput.style.height = 'auto';
-        };
-        recognition.onend = function(){
-          recording = false;
-          micBtn.classList.remove('recording');
-          micBtn.title = 'Voice input';
-          if (dom.promptInput.value.trim()) expandChat();
-        };
-        recognition.onerror = function(){
-          recording = false;
-          micBtn.classList.remove('recording');
-          micBtn.title = 'Voice input';
-        };
-      } else if (micBtn) {
-        micBtn.style.display = 'none';
-      }
+      recognition.onend = function(){
+        recording = false;
+        micBtn.classList.remove('recording');
+        micBtn.title = 'Voice input';
+        if (dom.promptInput.value.trim() && isMobileLayout()) window.expandChat();
+      };
+      recognition.onerror = function(){
+        recording = false;
+        micBtn.classList.remove('recording');
+        micBtn.title = 'Voice input';
+      };
+    } else if (micBtn) {
+      micBtn.style.display = 'none';
     }
 
   });
@@ -1579,7 +1540,7 @@ window.addEventListener('unhandledrejection', function(e) {
     sendToDesktop,
     downloadHTML,
     copyHTML,
-    generateHandoff,
+    generateHandoff: function(){ if(window.generateHandoffDoc) window.generateHandoffDoc(); },
     createWebhookEndpoint,
     pushState,
     hydrateState,

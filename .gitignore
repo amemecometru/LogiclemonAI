@@ -30,3 +30,5 @@ assets-inline.js
 worker/cf-problem
 clawhub-skill/
 backend-handoff/
+worker/deploy.sh
+worker/assets/fix.py
