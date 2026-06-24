@@ -1,6 +1,7 @@
 import { CreditLedger } from './credit-ledger.js';
 export { CreditLedger };
 import { serveAsset } from './assets-inline.js';
+import { getOrCreateUser, storeAuthKey, getUserByPrincipal, getUserByKey, saveGeneration, getGenerations, updatePreferences, getProjects, createProject, deleteGeneration, deleteProject } from './db.js';
 
 const CONFIG = {
   OPENROUTER_API_KEY: typeof OPENROUTER_API_KEY !== 'undefined' ? OPENROUTER_API_KEY : '',
@@ -92,6 +93,10 @@ function randomToken(bytes = 32) {
 
 async function issueOrGetUser(env, email, provider) {
   const e = (email || '').toLowerCase().trim();
+  let dbUser = null;
+  if (env.DB) {
+    dbUser = await getOrCreateUser(env, e, provider, '');
+  }
   if (env.WEBHOOKS_KV) {
     const existing = await env.WEBHOOKS_KV.get('user:email:' + e, 'json');
     if (existing && existing.wekKey) {
@@ -101,6 +106,9 @@ async function issueOrGetUser(env, email, provider) {
         await env.WEBHOOKS_KV.put('wek:' + p, JSON.stringify({ email: e, provider }));
       }
       existing.principal = p;
+      if (dbUser && env.DB) {
+        await env.DB.prepare('UPDATE users SET principal = ? WHERE id = ?').bind(p, dbUser.id).run();
+      }
       return existing;
     }
   }
@@ -110,6 +118,13 @@ async function issueOrGetUser(env, email, provider) {
   if (env.WEBHOOKS_KV) {
     await env.WEBHOOKS_KV.put('user:email:' + e, JSON.stringify(record));
     await env.WEBHOOKS_KV.put('wek:' + principal, JSON.stringify({ email: e, provider }));
+  }
+  if (env.DB && dbUser) {
+    await env.DB.prepare('UPDATE users SET principal = ? WHERE id = ?').bind(principal, dbUser.id).run();
+    await storeAuthKey(env, wekKey, dbUser.id);
+  } else if (env.DB) {
+    const created = await getOrCreateUser(env, e, provider, principal);
+    if (created) await storeAuthKey(env, wekKey, created.id);
   }
   return record;
 }
@@ -121,6 +136,23 @@ async function principalFromWekKey(env, wekKey) {
     return rec ? principal : null;
   }
   return principal;
+}
+
+async function resolveUserFromRequest(request, env) {
+  let principal = request.headers.get('x-principal') || '';
+  const apiKey = request.headers.get('x-api-key') || '';
+  if (!principal && apiKey.startsWith('wek_')) {
+    principal = (await principalFromWekKey(env, apiKey)) || '';
+  }
+  if (!principal) return null;
+  let user = null;
+  if (env.DB) {
+    user = await getUserByPrincipal(env, principal);
+    if (!user && apiKey.startsWith('wek_')) {
+      user = await getUserByKey(env, apiKey);
+    }
+  }
+  return { principal, user };
 }
 
 async function verifyStripeSignature(rawBody, sigHeader, secret) {
@@ -341,7 +373,7 @@ async function handleFreeGenerate(request, cors, env) {
   }
 }
 
-async function handleAiGenerate(request, cors, env) {
+async function handleAiGenerate(request, cors, env, ctx) {
   if (!env.AI) {
     return new Response(JSON.stringify({ error: 'AI binding not available — ensure [ai] binding is configured in wrangler.toml' }), {
       status: 503, headers: { 'Content-Type': 'application/json', ...cors },
@@ -366,6 +398,16 @@ async function handleAiGenerate(request, cors, env) {
       ],
       response_format: { type: "json_object" }
     });
+
+    ctx.waitUntil((async () => {
+      try {
+        const resolved = await resolveUserFromRequest(request, env);
+        if (resolved && resolved.user) {
+          const code = JSON.stringify(aiResponse);
+          await saveGeneration(env, resolved.user.id, userPrompt, body.model || '', code);
+        }
+      } catch (_) {}
+    })());
 
     return new Response(JSON.stringify(aiResponse), {
       headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache', ...cors },
@@ -619,6 +661,78 @@ function generateId(length = 24) {
   let id = '';
   for (let i = 0; i < length; i++) id += chars.charAt(Math.floor(Math.random() * chars.length));
   return id;
+}
+
+async function handleUserProfile(request, env, cors) {
+  const resolved = await resolveUserFromRequest(request, env);
+  if (!resolved || !resolved.user) {
+    return new Response(JSON.stringify({ error: 'Not authenticated' }), { status: 401, headers: { 'Content-Type': 'application/json', ...cors } });
+  }
+  const { user } = resolved;
+  const [generations, projects] = await Promise.all([
+    getGenerations(env, user.id, 10),
+    getProjects(env, user.id),
+  ]);
+  return new Response(JSON.stringify({
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    avatar: user.avatar,
+    provider: user.provider,
+    preferences: (() => { try { return JSON.parse(user.preferences || '{}'); } catch { return {}; } })(),
+    created_at: user.created_at,
+    last_sign_in: user.last_sign_in,
+    generations,
+    projects,
+  }), { headers: { 'Content-Type': 'application/json', ...cors } });
+}
+
+async function handleUpdatePreferences(request, env, cors) {
+  const resolved = await resolveUserFromRequest(request, env);
+  if (!resolved || !resolved.user) {
+    return new Response(JSON.stringify({ error: 'Not authenticated' }), { status: 401, headers: { 'Content-Type': 'application/json', ...cors } });
+  }
+  const body = await request.json();
+  await updatePreferences(env, resolved.user.id, body);
+  return new Response(JSON.stringify({ ok: true }), { headers: { 'Content-Type': 'application/json', ...cors } });
+}
+
+async function handleGenerations(request, env, cors) {
+  const resolved = await resolveUserFromRequest(request, env);
+  if (!resolved || !resolved.user) {
+    return new Response(JSON.stringify({ error: 'Not authenticated' }), { status: 401, headers: { 'Content-Type': 'application/json', ...cors } });
+  }
+  if (request.method === 'POST') {
+    const body = await request.json();
+    await saveGeneration(env, resolved.user.id, body.prompt || '', body.model || '', body.code || '');
+    return new Response(JSON.stringify({ ok: true }), { headers: { 'Content-Type': 'application/json', ...cors } });
+  }
+  if (request.method === 'DELETE') {
+    const body = await request.json();
+    const ok = await deleteGeneration(env, body.id, resolved.user.id);
+    return new Response(JSON.stringify({ ok }), { headers: { 'Content-Type': 'application/json', ...cors } });
+  }
+  const generations = await getGenerations(env, resolved.user.id);
+  return new Response(JSON.stringify({ generations }), { headers: { 'Content-Type': 'application/json', ...cors } });
+}
+
+async function handleProjects(request, env, cors) {
+  const resolved = await resolveUserFromRequest(request, env);
+  if (!resolved || !resolved.user) {
+    return new Response(JSON.stringify({ error: 'Not authenticated' }), { status: 401, headers: { 'Content-Type': 'application/json', ...cors } });
+  }
+  if (request.method === 'POST') {
+    const body = await request.json();
+    const project = await createProject(env, resolved.user.id, body.name, body.description);
+    return new Response(JSON.stringify({ project }), { headers: { 'Content-Type': 'application/json', ...cors } });
+  }
+  if (request.method === 'DELETE') {
+    const body = await request.json();
+    const ok = await deleteProject(env, body.id, resolved.user.id);
+    return new Response(JSON.stringify({ ok }), { headers: { 'Content-Type': 'application/json', ...cors } });
+  }
+  const projects = await getProjects(env, resolved.user.id);
+  return new Response(JSON.stringify({ projects }), { headers: { 'Content-Type': 'application/json', ...cors } });
 }
 
 async function handleOAuth(request, url, env) {
@@ -890,7 +1004,7 @@ export default {
         if (request.method === 'POST') return proxyOpenRouter(request, cors, env);
         break;
       case '/api/ai/generate':
-        if (request.method === 'POST') return handleAiGenerate(request, cors, env);
+        if (request.method === 'POST') return handleAiGenerate(request, cors, env, ctx);
         break;
       case '/api/ai/backend-assistant':
         if (request.method === 'POST') return handleAiBackendAssistant(request, cors, env);
@@ -915,6 +1029,15 @@ export default {
         break;
       case '/api/balance':
         return handleBalance(request, env, cors);
+      case '/api/user':
+        return handleUserProfile(request, env, cors);
+      case '/api/user/preferences':
+        if (request.method === 'POST') return handleUpdatePreferences(request, env, cors);
+        break;
+      case '/api/generations':
+        return handleGenerations(request, env, cors);
+      case '/api/projects':
+        return handleProjects(request, env, cors);
       case '/api/auth/github':
       case '/api/auth/github/callback':
       case '/api/auth/google':

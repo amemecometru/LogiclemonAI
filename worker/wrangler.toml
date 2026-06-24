@@ -5,12 +5,14 @@ compatibility_date = "2026-06-11"
 [placement]
 mode = "smart"
 
-[assets]
-directory = "./assets"
-
 [[kv_namespaces]]
 binding = "WEBHOOKS_KV"
 id = "5b35c96a0bdd418685bfb6ce68884acd"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "dipdesigns-db"
+database_id = "e36e0a43-72c1-447c-98a8-37ebc6acfbbb"
 
 [[durable_objects.bindings]]
 name = "SESSION_HUB"
