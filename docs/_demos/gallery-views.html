@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+  DipDesigns · Main Studio — Image View Switcher  (NO-BREAK: single file, zero deps)
+  Modes: Carousel · Tiles · Windows (+ "Tile windows" auto-arrange).
+  INTEGRATION: feed the studio's generated images into the IMAGES array
+  ({id,title,src}); lift the <style>, markup (.viewer), and <script> into the
+  studio shell. With no src, it renders labelled gradient placeholders so it
+  works standalone.
+-->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Studio — Image Views</title>
+<style>
+  :root{--bg:#070b12;--bg2:#0b111b;--panel:#11161f;--line:rgba(120,170,210,.16);
+    --teal:#3fe0d0;--ink:#e6edf5;--dim:#9fb0c3;--ring:rgba(63,224,208,.22);--radius:14px;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;}
+  .viewer{max-width:1100px;margin:0 auto;padding:20px;}
+  .toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:rgba(255,255,255,.03);}
+  .seg button{background:transparent;border:none;color:var(--dim);font-family:inherit;font-size:13px;font-weight:600;
+    padding:9px 16px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:color .2s,background .2s;}
+  .seg button:hover{color:var(--ink);}
+  .seg button.on{background:linear-gradient(135deg,var(--teal),#1ea99b);color:#04201d;}
+  .seg svg{width:15px;height:15px;}
+  .spacer{margin-left:auto;}
+  .act{border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--ink);font:600 13px system-ui;
+    padding:9px 14px;border-radius:999px;cursor:pointer;display:none;align-items:center;gap:7px;}
+  .act:hover{border-color:var(--teal);}
+  .count{font:600 12px ui-monospace,monospace;color:var(--dim);}
+
+  /* stage shared */
+  .stage{border:1px solid var(--line);border-radius:var(--radius);background:linear-gradient(180deg,var(--bg2),var(--bg));min-height:440px;position:relative;overflow:hidden;}
+  .ph{position:relative;display:grid;place-items:end start;color:#dfe8f2;}
+  .ph .cap{position:relative;z-index:2;font:600 12px system-ui;padding:10px 12px;text-shadow:0 1px 4px rgba(0,0,0,.6);}
+  .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+
+  /* CAROUSEL */
+  .car{display:none;}
+  body[data-mode="carousel"] .car{display:block;}
+  .car-track{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;padding:18px;scrollbar-width:thin;}
+  .car-track::-webkit-scrollbar{height:6px;}.car-track::-webkit-scrollbar-thumb{background:var(--teal);border-radius:6px;}
+  .car-track .ph{flex:0 0 78%;max-width:78%;height:404px;border-radius:12px;overflow:hidden;scroll-snap-align:center;border:1px solid var(--line);}
+  .car-nav{position:absolute;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:50%;border:1px solid var(--line);
+    background:rgba(7,11,18,.8);color:var(--ink);font-size:18px;cursor:pointer;backdrop-filter:blur(6px);z-index:5;}
+  .car-nav:hover{border-color:var(--teal);color:var(--teal);}
+  .car-nav.prev{left:14px;}.car-nav.next{right:14px;}
+
+  /* TILES */
+  .tiles{display:none;}
+  body[data-mode="tiles"] .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;padding:18px;}
+  .tiles .ph{height:170px;border-radius:12px;overflow:hidden;border:1px solid var(--line);cursor:pointer;transition:transform .2s,border-color .2s;}
+  .tiles .ph:hover{transform:translateY(-3px);border-color:var(--teal);}
+
+  /* WINDOWS */
+  .winstage{display:none;}
+  body[data-mode="windows"] .winstage{display:block;}
+  .win{position:absolute;width:300px;height:220px;border:1px solid var(--line);border-radius:12px;overflow:hidden;
+    background:var(--panel);box-shadow:0 18px 50px rgba(0,0,0,.5);transition:box-shadow .2s;
+    transition-property:left,top,width,height,box-shadow;transition-duration:.32s;transition-timing-function:cubic-bezier(.22,.61,.36,1);}
+  .win.dragging{transition:none;box-shadow:0 0 0 1px var(--teal),0 24px 60px rgba(0,0,0,.6);z-index:50;}
+  .win-bar{height:30px;display:flex;align-items:center;gap:8px;padding:0 10px;cursor:grab;background:rgba(255,255,255,.04);border-bottom:1px solid var(--line);}
+  .win-bar:active{cursor:grabbing;}
+  .win-dot{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 8px var(--ring);}
+  .win-title{font:600 11px system-ui;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .win-x{margin-left:auto;color:var(--dim);background:none;border:none;cursor:pointer;font-size:15px;line-height:1;}
+  .win-x:hover{color:var(--teal);}
+  .win-body{position:absolute;inset:30px 0 0 0;}
+  .win-body .ph{position:absolute;inset:0;}
+  @media(prefers-reduced-motion:reduce){.win{transition:none;}.tiles .ph{transition:none;}}
+</style>
+</head>
+<body data-mode="carousel">
+  <div class="viewer">
+    <div class="toolbar">
+      <div class="seg" id="seg">
+        <button data-mode="carousel" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="5" width="10" height="14" rx="2"/><path d="M3 8v8M21 8v8"/></svg>Carousel</button>
+        <button data-mode="tiles"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Tiles</button>
+        <button data-mode="windows"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="9" height="7" rx="1"/><rect x="13" y="9" width="8" height="11" rx="1"/></svg>Windows</button>
+      </div>
+      <button class="act" id="tileWins"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8"/><rect x="13" y="3" width="8" height="8"/><rect x="3" y="13" width="8" height="8"/><rect x="13" y="13" width="8" height="8"/></svg>Tile windows</button>
+      <span class="spacer"></span>
+      <span class="count" id="count"></span>
+    </div>
+
+    <div class="stage" id="stage">
+      <button class="car-nav prev" id="prev" aria-label="Previous">‹</button>
+      <button class="car-nav next" id="next" aria-label="Next">›</button>
+      <div class="car"><div class="car-track" id="carTrack"></div></div>
+      <div class="tiles" id="tiles"></div>
+      <div class="winstage" id="winstage"></div>
+    </div>
+  </div>
+
+<script>
+  // [EDIT] Feed real studio images here: {id, title, src}. src optional (placeholder if blank).
+  var IMAGES = [
+    {id:1,title:"Generation 01 — Hero",   src:"", hue:"165,90%,55%"},
+    {id:2,title:"Generation 02 — Pricing",src:"", hue:"35,95%,58%"},
+    {id:3,title:"Generation 03 — Dash",   src:"", hue:"265,80%,62%"},
+    {id:4,title:"Generation 04 — Mobile", src:"", hue:"200,85%,55%"},
+    {id:5,title:"Generation 05 — Landing",src:"", hue:"12,90%,60%"},
+    {id:6,title:"Generation 06 — Form",   src:"", hue:"320,75%,62%"}
+  ];
+  function phHTML(im){
+    if(im.src){
+      return '<div class="ph"><img src="'+im.src+'" alt=""><span class="cap">'+im.title+'</span></div>';
+    }
+    var h = im.hue || "200,80%,55%";
+    return '<div class="ph" style="background:linear-gradient(150deg,hsl('+h+'),rgba(7,11,18,.9))"><span class="cap">'+im.title+'</span></div>';
+  }
+  var body=document.body, $=function(s){return document.getElementById(s);};
+  // render carousel + tiles
+  $('carTrack').innerHTML = IMAGES.map(phHTML).join('');
+  $('tiles').innerHTML   = IMAGES.map(phHTML).join('');
+  $('count').textContent = IMAGES.length+' images';
+
+  // mode switching
+  function setMode(m){
+    body.setAttribute('data-mode',m);
+    Array.prototype.forEach.call($('seg').children,function(b){b.classList.toggle('on',b.dataset.mode===m);});
+    var carNav=m==='carousel'; $('prev').style.display=$('next').style.display=carNav?'block':'none';
+    $('tileWins').style.display = m==='windows'?'inline-flex':'none';
+    if(m==='windows') buildWindows();
+  }
+  Array.prototype.forEach.call($('seg').children,function(b){b.addEventListener('click',function(){setMode(b.dataset.mode);});});
+
+  // carousel nav
+  function scrollCar(d){var t=$('carTrack');t.scrollBy({left:d*t.clientWidth*0.8,behavior:'smooth'});}
+  $('prev').onclick=function(){scrollCar(-1);};$('next').onclick=function(){scrollCar(1);};
+
+  // windows
+  var built=false;
+  function buildWindows(){
+    if(built) return; built=true;
+    var stage=$('winstage');
+    IMAGES.forEach(function(im,i){
+      var w=document.createElement('div'); w.className='win';
+      w.style.left=(24+i*30)+'px'; w.style.top=(20+i*26)+'px'; w.style.zIndex=i+1;
+      w.innerHTML='<div class="win-bar"><span class="win-dot"></span><span class="win-title">'+im.title+'</span><button class="win-x" aria-label="Close">×</button></div><div class="win-body">'+phHTML(im)+'</div>';
+      stage.appendChild(w);
+      w.querySelector('.win-x').onclick=function(){w.remove();};
+      dragify(w, w.querySelector('.win-bar'), stage);
+      w.addEventListener('pointerdown',function(){topZ(w,stage);});
+    });
+  }
+  function topZ(w,stage){var max=0;stage.querySelectorAll('.win').forEach(function(x){max=Math.max(max,+x.style.zIndex||0);});w.style.zIndex=max+1;}
+  function dragify(w,handle,stage){
+    var sx,sy,ox,oy,on=false;
+    handle.addEventListener('pointerdown',function(e){on=true;w.classList.add('dragging');handle.setPointerCapture(e.pointerId);
+      sx=e.clientX;sy=e.clientY;ox=w.offsetLeft;oy=w.offsetTop;});
+    handle.addEventListener('pointermove',function(e){if(!on)return;
+      var nx=ox+(e.clientX-sx), ny=oy+(e.clientY-sy);
+      nx=Math.max(0,Math.min(nx,stage.clientWidth-w.offsetWidth));
+      ny=Math.max(0,Math.min(ny,stage.clientHeight-w.offsetHeight));
+      w.style.left=nx+'px';w.style.top=ny+'px';});
+    handle.addEventListener('pointerup',function(){on=false;w.classList.remove('dragging');});
+  }
+  // auto-tile open windows into a grid
+  $('tileWins').onclick=function(){
+    var stage=$('winstage'), wins=Array.prototype.slice.call(stage.querySelectorAll('.win'));
+    if(!wins.length) return;
+    var n=wins.length, cols=Math.ceil(Math.sqrt(n)), rows=Math.ceil(n/cols), g=12;
+    var W=(stage.clientWidth-g*(cols+1))/cols, H=(stage.clientHeight-g*(rows+1))/rows;
+    wins.forEach(function(w,i){var c=i%cols, r=Math.floor(i/cols);
+      w.style.left=(g+c*(W+g))+'px'; w.style.top=(g+r*(H+g))+'px';
+      w.style.width=W+'px'; w.style.height=H+'px'; w.style.zIndex=1;});
+  };
+  setMode('carousel');
+</script>
+</body>
+</html>

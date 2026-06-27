@@ -5,6 +5,10 @@ compatibility_date = "2026-06-11"
 [placement]
 mode = "smart"
 
+[[r2_buckets]]
+binding = "THUMBS"
+bucket_name = "dipdesigns-thumbs"
+
 [[kv_namespaces]]
 binding = "WEBHOOKS_KV"
 id = "5b35c96a0bdd418685bfb6ce68884acd"
@@ -32,6 +36,9 @@ new_sqlite_classes = ["CreditLedger"]
 
 [ai]
 binding = "AI"
+
+[assets]
+directory = "./public"
 
 [vars]
 CREDIT_COST = "1"

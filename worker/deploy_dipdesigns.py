@@ -38,6 +38,7 @@ def api(method, path, data=None, headers=None):
 
 main_script = read_file("index.js")
 ledger_script = read_file("credit-ledger.js")
+db_script = read_file("db.js")
 assets_inline = read_file("assets-inline.js")
 
 metadata = {
@@ -55,6 +56,7 @@ parts = [
     ("metadata", None, json.dumps(metadata), "application/json"),
     ("index.js", "index.js", main_script, "application/javascript+module"),
     ("credit-ledger.js", "credit-ledger.js", ledger_script, "application/javascript+module"),
+    ("db.js", "db.js", db_script, "application/javascript+module"),
     ("assets-inline.js", "assets-inline.js", assets_inline, "application/javascript+module"),
 ]
 

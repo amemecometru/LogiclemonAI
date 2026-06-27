@@ -331,6 +331,7 @@ Suggest practical webhook endpoints that integrate with the Cloudflare Worker an
   function setModel(modelId) {
     if (activeModels().some(m => m.id === modelId)) {
       CONFIG.model = modelId;
+      savePreferences({ model: modelId });
     }
   }
 
@@ -1957,6 +1958,55 @@ window.addEventListener('unhandledrejection', function(e) {
 
   });
 
+  function _apiKey(){
+    return CONFIG.apiKey || (function(){try{return localStorage.getItem('webhooks_email_api_key')}catch(e){return ''}})();
+  }
+  function _apiBase(){
+    return (CONFIG.workerURL || '').replace(/\/+$/, '');
+  }
+  function _apiGet(path){
+    var k = _apiKey();
+    if (!k) return Promise.resolve(null);
+    return fetch(_apiBase() + path, { headers: { 'x-api-key': k } }).then(function(r){ return r.ok ? r.json() : null; });
+  }
+  function _apiPost(path, body, method, body2){
+    var k = _apiKey();
+    if (!k) return Promise.resolve(null);
+    return fetch(_apiBase() + path, {
+      method: method || 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': k },
+      body: JSON.stringify(body2 || body),
+    }).then(function(r){ return r.ok ? r.json() : null; });
+  }
+
+  function fetchHistory(){
+    return _apiGet('/api/generations');
+  }
+  function fetchProjects(){
+    return _apiGet('/api/projects');
+  }
+  function createProject(name, description){
+    return _apiPost('/api/projects', { name: name, description: description || '' });
+  }
+  function deleteGeneration(id){
+    return _apiPost('/api/generations', null, 'DELETE', { id: id });
+  }
+  function deleteProject(id){
+    return _apiPost('/api/projects', null, 'DELETE', { id: id });
+  }
+  function savePreferences(prefs){
+    return _apiPost('/api/user/preferences', prefs);
+  }
+  function loadPreferences(){
+    return _apiGet('/api/user').then(function(data){
+      if (data && data.preferences) {
+        if (data.preferences.model) setModel(data.preferences.model);
+        return data.preferences;
+      }
+      return null;
+    });
+  }
+
   window.DipDesigns = {
     setApiKey,
     setBaseURL,
@@ -2009,5 +2059,12 @@ window.addEventListener('unhandledrejection', function(e) {
     getLastResult: () => lastResult,
     getModels: () => MODELS,
     getSkills: () => Object.keys(SKILLS),
+    fetchHistory,
+    fetchProjects,
+    createProject,
+    deleteGeneration,
+    deleteProject,
+    savePreferences,
+    loadPreferences,
   };
 })();

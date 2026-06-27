@@ -508,6 +508,201 @@ async function handleBackendAssistant(request, cors, env) {
   }
 }
 
+// ── Thumbnail Generator (ported from telegram-worker pipeline, merged via open-core) ──
+const THUMB_MODEL = 'google/gemini-2.5-flash-image';
+
+async function llmText(prompt, env, maxTokens = 1000, temp = 0.7) {
+  const resp = await fetch(CONFIG.OPENROUTER_BASE + '/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + (env.OPENROUTER_API_KEY || CONFIG.OPENROUTER_API_KEY),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: CONFIG.MODEL,
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: maxTokens,
+      temperature: temp,
+    }),
+  });
+  if (!resp.ok) throw new Error('LLM: ' + await resp.text());
+  const data = await resp.json();
+  return (data.choices?.[0]?.message?.content || '').trim();
+}
+
+async function llmJSON(prompt, env, maxTokens = 1500, temp = 0.7) {
+  const text = await llmText(prompt, env, maxTokens, temp);
+  let cleaned = text;
+  if (cleaned.startsWith('```')) cleaned = cleaned.replace(/^```(json)?\s*/i, '').replace(/\s*```$/, '').trim();
+  try { return JSON.parse(cleaned); }
+  catch (e) { throw new Error('LLM JSON parse error: ' + cleaned.slice(0, 150)); }
+}
+
+async function llmImage(prompt, env) {
+  const resp = await fetch(CONFIG.OPENROUTER_BASE + '/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + (env.OPENROUTER_API_KEY || CONFIG.OPENROUTER_API_KEY),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: THUMB_MODEL,
+      messages: [{ role: 'user', content: [{ type: 'text', text: prompt }] }],
+      modalities: ['image', 'text'],
+    }),
+  });
+  if (!resp.ok) throw new Error('Image gen error: ' + await resp.text());
+  const data = await resp.json();
+  const msg = data.choices?.[0]?.message || {};
+  const images = msg.images;
+  if (images?.[0]?.image_url?.url) return images[0].image_url.url;
+  const content = msg.content || '';
+  const m = content.match(/https?:\/\/[^\s)'"]+/);
+  return m ? m[0] : '';
+}
+
+async function handleThumbnail(request, cors, env) {
+  try {
+    const xApiKey = request.headers.get('x-api-key') || '';
+    let principal = '';
+    if (xApiKey.startsWith('wek_')) {
+      principal = await principalFromWekKey(env, xApiKey);
+      if (!principal) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401, headers: { 'Content-Type': 'application/json', ...cors },
+        });
+      }
+    } else {
+      return new Response(JSON.stringify({ error: 'x-api-key (wek_*) required' }), {
+        status: 401, headers: { 'Content-Type': 'application/json', ...cors },
+      });
+    }
+
+    const body = await request.json();
+    const topic = body.topic || '';
+    const title = body.title || '';
+    if (!topic) {
+      return new Response(JSON.stringify({ error: 'topic is required' }), {
+        status: 400, headers: { 'Content-Type': 'application/json', ...cors },
+      });
+    }
+
+    const cost = parseInt(env.CREDIT_COST || CONFIG.CREDIT_COST || '1');
+    if (env.CREDIT_LEDGER) {
+      const ledger = getLedger(principal, env);
+      const spendResult = await doLedgerAction(ledger, 'spend', { cost });
+      if (!spendResult.ok) {
+        return new Response(JSON.stringify({ error: 'insufficient_credits', balance: spendResult.balance }), {
+          status: 402, headers: { 'Content-Type': 'application/json', ...cors },
+        });
+      }
+    }
+
+    // Step 1: Thumbnail design concept
+    const designPrompt = `Create a YouTube thumbnail design for a video titled "${title || topic}" about ${topic}.
+
+Provide three things as JSON:
+{
+  "concept": "3-4 sentence visual concept",
+  "composition": "3-5 sentence composition guide", 
+  "text_overlay": "MAX 3 punchy words"
+}`;
+    const design = await llmJSON(designPrompt, env, 600, 0.7);
+
+    // Step 2: Generate the image with safe-zone enforcement
+    const genPrompt = `Create a YouTube thumbnail. Concept: ${design.concept || ''} Composition: ${design.composition || ''} Text overlay: '${design.text_overlay || ''}' in bold white font with black stroke. Style: high contrast, 1280x720. CRITICAL: Keep ALL text at least 8% (102px) inside all edges — no text in the outer 8% margin zone.`;
+    const imageUrl = await llmImage(genPrompt, env);
+
+    if (!imageUrl) {
+      return new Response(JSON.stringify({ error: 'image generation returned empty URL' }), {
+        status: 500, headers: { 'Content-Type': 'application/json', ...cors },
+      });
+    }
+
+    // Step 3: Process through Cloudflare Image Resizing to enforce 8% safe zone
+    // Trim 102px from left/right (8% of 1280), 58px from top/bottom (8% of 720)
+    // Then pad back to 1280x720 with black — guarantees text never touches edge
+    let safeUrl = imageUrl;
+    const thumbId = randomToken(8);
+    let r2Key = null;
+    try {
+      const processed = await fetch(imageUrl, {
+        cf: {
+          image: {
+            width: 1280,
+            height: 720,
+            fit: 'pad',
+            background: { r: 0, g: 0, b: 0 },
+            trim: { top: 58, bottom: 58, left: 102, right: 102 },
+          },
+        },
+      });
+      if (processed.ok && env.THUMBS) {
+        const blob = await processed.blob();
+        r2Key = `thumb_${thumbId}.png`;
+        await env.THUMBS.put(r2Key, blob, {
+          httpMetadata: { contentType: 'image/png' },
+        });
+        safeUrl = `/api/thumbnail/serve?id=${thumbId}`;
+      }
+    } catch (_) {
+      // Image Resizing not available — fall back to caching raw image in R2
+    }
+    // If Image Resizing unavailable, cache raw image in R2 so URL doesn't expire
+    if (!r2Key && env.THUMBS) {
+      try {
+        const raw = await fetch(imageUrl);
+        if (raw.ok) {
+          r2Key = `thumb_${thumbId}.png`;
+          await env.THUMBS.put(r2Key, await raw.blob(), {
+            httpMetadata: { contentType: 'image/png' },
+          });
+          safeUrl = `/api/thumbnail/serve?id=${thumbId}`;
+        }
+      } catch (_) {}
+    }
+
+    const result = {
+      thumbnail_url: safeUrl,
+      raw_url: imageUrl,
+      concept: design.concept || '',
+      text_overlay: design.text_overlay || '',
+      dimensions: '1280x720',
+      safe_margin: '8% (102px)',
+    };
+
+    return new Response(JSON.stringify(result), {
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache', ...cors },
+    });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500, headers: { 'Content-Type': 'application/json', ...cors },
+    });
+  }
+}
+
+async function handleThumbnailServe(request, cors, env) {
+  try {
+    const url = new URL(request.url);
+    const id = url.searchParams.get('id') || '';
+    if (!id || !env.THUMBS) {
+      return new Response('Not found', { status: 404 });
+    }
+    const obj = await env.THUMBS.get(`thumb_${id}.png`);
+    if (!obj) {
+      return new Response('Not found', { status: 404 });
+    }
+    const headers = {
+      'Content-Type': 'image/png',
+      'Cache-Control': 'public, max-age=86400',
+      ...cors,
+    };
+    return new Response(obj.body, { headers });
+  } catch (err) {
+    return new Response('Error', { status: 500 });
+  }
+}
+
 async function handleCheckout(request, cors, env) {
   try {
     const body = await request.json();
@@ -969,6 +1164,79 @@ async function handleState(request, env, cors) {
   return new Response('Method not allowed', { status: 405, headers: cors });
 }
 
+/* ---- Inspiration hub: brief + palette naming + My Palettes (per-user, D1) ---- */
+function _ipJ(o, cors, s){ return new Response(JSON.stringify(o), { status: s||200, headers: { 'Content-Type':'application/json', ...cors } }); }
+async function _ipPrincipal(request, env){ const k = request.headers.get('x-api-key') || ''; return k.startsWith('wek_') ? (await principalFromWekKey(env, k)) || '' : ''; }
+
+// POST /api/brief — design-seed brief (D1 item if itemId; else posted palette/seed). Free.
+async function handleBrief(request, cors, env){
+  try{
+    const b = await request.json();
+    let item = null;
+    if (env.DB && b.itemId){ item = await env.DB.prepare('SELECT * FROM inspiration_items WHERE id=?').bind(b.itemId).first().catch(()=>null); }
+    let pal = b.palette || null;
+    if (!pal && item && item.palette_id && env.DB){ pal = await env.DB.prepare('SELECT * FROM palettes WHERE id=?').bind(item.palette_id).first().catch(()=>null); }
+    const mode = b.nobreak ? 'No-Break — single self-contained HTML5/CSS3/vanilla-JS file, zero dependencies' : 'Standard';
+    const palLine = pal ? ((pal.name||'Custom')+' — base '+pal.base_hex+' · primary '+pal.primary_hex+' · accent '+pal.accent_hex+' · surface '+pal.surface_hex) : "Designer's choice";
+    const seed = (item && item.seed_prompt) || b.seed || '';
+    const briefMd = '# Design Brief — '+((item&&item.title)||(pal&&pal.name)||'Custom')+'\n'
+      + '**Intent:** '+((item&&item.description)||'Build using the supplied palette.')+'\n'
+      + '**Color story:** '+palLine+'\n**Mode:** '+mode+'\n**Studio prompt:** '+seed+'\n';
+    const briefId = generateId();
+    const principal = await _ipPrincipal(request, env);
+    if (principal && env.DB){ await env.DB.prepare('INSERT INTO brief_log (id,principal,item_id,brief_md,created_at) VALUES (?,?,?,?,?)').bind(briefId, principal, b.itemId||null, briefMd, Date.now()).run().catch(()=>{}); }
+    return _ipJ({ briefId, briefMd, seed:{ prompt: seed, palette: pal||null, nobreak: !!b.nobreak } }, cors);
+  }catch(err){ return _ipJ({ error: err.message }, cors, 500); }
+}
+
+// POST /api/palette-name — Workers AI names; deterministic fallback. Free.
+function _ipNameHex(h){ var r=parseInt(h.slice(1,3),16)/255,g=parseInt(h.slice(3,5),16)/255,bl=parseInt(h.slice(5,7),16)/255;
+  var mx=Math.max(r,g,bl),mn=Math.min(r,g,bl),d=mx-mn,H=0; if(d){ if(mx===r)H=((g-bl)/d)%6; else if(mx===g)H=(bl-r)/d+2; else H=(r-g)/d+4; } H=(H*60+360)%360;
+  var s=mx?d/mx:0,v=mx;
+  if(v<0.20)return'Obsidian'; if(s<0.12)return'Quartz Veil';
+  if(H<18||H>=345)return'Garnet'; if(H<45)return v<0.72?'Copper':'Amber'; if(H<80)return'Pyrite Gold';
+  if(H<160)return'Jade'; if(H<200)return'Verdigris'; if(H<250)return'Lapis'; if(H<300)return'Amethyst'; return v<0.62?'Mulberry':'Rose Quartz'; }
+async function handlePaletteName(request, cors, env){
+  try{
+    const { hexes=[] } = await request.json();
+    if (!Array.isArray(hexes) || !hexes.length) return _ipJ({ error:'hexes required' }, cors, 400);
+    if (env.AI){ try{
+      const out = await env.AI.run('@cf/meta/llama-3-8b-instruct', { messages:[
+        { role:'system', content:'You name colors like a premium paint brand (Farrow & Ball style). Reply ONLY with a comma-separated list of evocative 1-2 word names, in order, one per hex. No hashes, no extra text.' },
+        { role:'user', content:'Name these colors: '+hexes.join(', ') } ] });
+      const names = (out.response||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
+      if (names.length === hexes.length) return _ipJ({ names }, cors);
+    }catch(_){} }
+    return _ipJ({ names: hexes.map(_ipNameHex), fallback:true }, cors);
+  }catch(err){ return _ipJ({ error: err.message }, cors, 500); }
+}
+
+// /api/palettes — per-user saved palettes (My Palettes). D1 table user_palettes (migration 0003).
+async function handlePalettes(request, cors, env){
+  const principal = await _ipPrincipal(request, env);
+  if (request.method === 'GET'){
+    if (!principal || !env.DB) return _ipJ({ palettes: [] }, cors);
+    const r = await env.DB.prepare('SELECT id,name,base_hex,primary_hex,accent_hex,surface_hex,source,created_at FROM user_palettes WHERE principal=? ORDER BY created_at DESC LIMIT 200').bind(principal).all();
+    return _ipJ({ palettes: r.results || [] }, cors);
+  }
+  if (request.method === 'POST'){
+    if (!principal) return _ipJ({ error:'auth required' }, cors, 401);
+    const b = await request.json();
+    if (b.action === 'delete'){
+      if (!b.id) return _ipJ({ error:'id required' }, cors, 400);
+      await env.DB.prepare('DELETE FROM user_palettes WHERE id=? AND principal=?').bind(b.id, principal).run();
+      return _ipJ({ ok:true, deleted:b.id }, cors);
+    }
+    if (!b.base || !b.primary || !b.accent || !b.surface) return _ipJ({ error:'need base, primary, accent, surface' }, cors, 400);
+    const cnt = await env.DB.prepare('SELECT COUNT(*) AS n FROM user_palettes WHERE principal=?').bind(principal).first();
+    if (cnt && cnt.n >= 200) return _ipJ({ error:'palette_limit_reached' }, cors, 409);
+    const id = generateId();
+    await env.DB.prepare('INSERT INTO user_palettes (id,principal,name,base_hex,primary_hex,accent_hex,surface_hex,source,created_at) VALUES (?,?,?,?,?,?,?,?,?)').bind(id, principal, (b.name||'Untitled').slice(0,60), b.base, b.primary, b.accent, b.surface, (b.source||'image'), Date.now()).run();
+    return _ipJ({ ok:true, id }, cors);
+  }
+  return _ipJ({ error:'method not allowed' }, cors, 405);
+}
+
 const BLOCKED_UA_PATTERNS = [
   'bot', 'crawl', 'scrape', 'spider', 'python-requests', 'curl', 'wget',
   'go-http-client', 'java/', 'okhttp', 'axios', 'php', 'ruby', 'perl',
@@ -1021,6 +1289,11 @@ export default {
       case '/api/webhook':
         if (request.method === 'POST') return handleWebhook(request, cors, env);
         break;
+      case '/api/thumbnail':
+        if (request.method === 'POST') return handleThumbnail(request, cors, env);
+        break;
+      case '/api/thumbnail/serve':
+        return handleThumbnailServe(request, cors, env);
       case '/api/checkout':
         if (request.method === 'POST') return handleCheckout(request, cors, env);
         break;
@@ -1029,6 +1302,14 @@ export default {
         break;
       case '/api/balance':
         return handleBalance(request, env, cors);
+      case '/api/brief':
+        if (request.method === 'POST') return handleBrief(request, cors, env);
+        break;
+      case '/api/palette-name':
+        if (request.method === 'POST') return handlePaletteName(request, cors, env);
+        break;
+      case '/api/palettes':
+        return handlePalettes(request, cors, env);
       case '/api/user':
         return handleUserProfile(request, env, cors);
       case '/api/user/preferences':
@@ -1064,6 +1345,8 @@ export default {
       assetPath = '/landing.html';
     } else if (assetPath === '/studio') {
       assetPath = '/index.html';
+    } else if (assetPath === '/inspiration') {
+      assetPath = '/inspiration.html';
     }
     const assetResponse = await serveAsset(assetPath);
     if (assetResponse) return assetResponse;

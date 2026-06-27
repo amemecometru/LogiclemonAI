@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aether Studio — Pro Workspace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ── AETHER HIGH-FIDELITY DESIGN SYSTEM TOKENS ── */
+    :root {
+      --bg-void: #090d16;        /* Deep obsidian base backing */
+      --bg-base: #0c1322;        /* Sleek intermediate panel canvas */
+      --bg-raise: #121b2d;       /* Elevated glass card elements */
+      
+      /* 🦾 HEAVY BRUSHED METALLIC GRADIENT TOKENS */
+      --metal-brushed: linear-gradient(105deg, #e2e8f0 0%, #ffffff 25%, #cbd5e1 50%, #94a3b8 75%, #64748b 100%);
+      --metal-dark-brushed: linear-gradient(135deg, #334155 0%, #1e293b 45%, #0f172a 55%, #020617 100%);
+      --inset-metal-shIM: inset 1px 1px 0px rgba(255, 255, 255, 0.4), inset -1px -1px 2px rgba(0, 0, 0, 0.28);
+      
+      --teal: #38bdf8;           /* Cyber sky-blue/teal primary accent */
+      --teal-bright: #0ea5e9;    /* Vibrant neon cyan-blue focus */
+      --teal-soft: rgba(56, 189, 248, 0.15);
+      
+      --ember: #ef4444;          /* Cyber crimson-red for failure states */
+      --ember-soft: rgba(239, 68, 68, 0.15);
+
+      --blue-acc: #3b82f6;       /* Clean cobalt blue */
+      --blue-soft: rgba(59, 130, 246, 0.15);
+      
+      --green-ok: #34d399;       /* Vibrant emerald */
+      --green-soft: rgba(52, 211, 153, 0.12);
+      
+      --metal-hi: #ffffff;       
+      --metal-1: #f1f5f9;        
+      --metal-2: #cbd5e1;        
+      --metal-4: #64748b;        
+      --metal-dim: #334155;      
+      
+      --line-dark: rgba(148, 163, 184, 0.08); 
+      --line-bright: rgba(255, 255, 255, 0.04);
+      
+      --font-ui: 'Outfit', system-ui, -apple-system, sans-serif;
+      --font-mono: 'Space Mono', monospace;
+      
+      --r-sm: 6px;
+      --r-md: 10px;
+      --r-lg: 16px;
+      
+      --t-base: 0.22s;
+      --ease: cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    /* ── BASE RESET & STRUCTURE ── */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      background-color: var(--bg-void);
+      color: var(--metal-1);
+      font-family: var(--font-ui);
+      font-size: 13px;
+      line-height: 1.5;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background: 
+        radial-gradient(900px circle at 85% 15%, rgba(56, 189, 248, 0.05), transparent 75%),
+        radial-gradient(1200px circle at 15% 85%, rgba(59, 130, 246, 0.03), transparent 70%);
+    }
+
+    .app-container {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      min-height: 100vh;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── 🦾 THE SILVER/METALLIC LEFT SIDEBAR COLUMN ── */
+    .sidebar {
+      background: var(--metal-brushed);
+      border-right: 2px solid #475569;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100vh;
+      position: sticky;
+      top: 0;
+      box-shadow: inset -1px 0 0 rgba(255,255,255,0.2), 6px 0 30px rgba(0,0,0,0.4);
+    }
+
+    .brand-section {
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon-box {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--r-sm);
+      background: var(--metal-dark-brushed);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    .brand-icon-symbol {
+      color: var(--teal);
+      font-weight: 900;
+      font-size: 14px;
+      text-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+    }
+
+    .brand-title-wrap {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 900;
+      color: #0f172a; /* Deep contrast tone against silver aluminum */
+      letter-spacing: -0.01em;
+    }
+
+    .brand-sub {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #475569;
+      font-weight: 700;
+    }
+
+    .nav-list {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      list-style: none;
+    }
+
+    /* Metallic sidebar nav link integration options */
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: var(--r-sm);
+      color: #334155;
+      font-weight: 600;
+      font-size: 13px;
+      text-decoration: none;
+      transition: all var(--t-base) var(--ease);
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+
+    .nav-item:hover {
+      color: #000;
+      background: rgba(255, 255, 255, 0.3);
+      border-color: rgba(255,255,255,0.4);
+    }
+
+    /* Stamped Inset Metal active selection frame */
+    .nav-item.active {
+      color: var(--metal-hi);
+      background: var(--metal-dark-brushed);
+      border-color: #0f172a;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1);
+    }
+
+    .nav-item.active .nav-icon {
+      color: var(--teal);
+    }
+
+    .nav-icon {
+      font-size: 14px;
+      color: #475569;
+      transition: color var(--t-base);
+    }
+
+    .sidebar-footer {
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
+      padding-top: 16px;
+    }
+
+    /* Stamped brushed metal action button */
+    .btn-new-signal {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 11px;
+      background: var(--metal-dark-brushed);
+      color: #fff;
+      font-weight: 700;
+      font-size: 11px;
+      border-radius: var(--r-sm);
+      border: 1px solid #0f172a;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      transition: transform var(--t-base) var(--ease);
+    }
+
+    .btn-new-signal:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+    }
+
+    /* ── MAIN WORKSPACE PANELS ── */
+    .workspace {
+      display: grid;
+      grid-template-columns: 1.15fr 1.25fr;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .panel {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      background: var(--bg-base);
+    }
+
+    .panel:first-child {
+      border-right: 1px solid var(--line-dark);
+    }
+
+    .panel-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--line-dark);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(9, 13, 22, 0.4);
+      min-height: 64px;
+    }
+
+    .panel-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--metal-hi);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .panel-body {
+      padding: 24px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      background-color: var(--green-ok);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--green-ok);
+      animation: pulse 1.8s infinite alternate;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.4; transform: scale(0.9); }
+      100% { opacity: 1; transform: scale(1.1); box-shadow: 0 0 12px var(--green-ok); }
+    }
+
+    .badge-live {
+      font-family: var(--font-mono);
+      font-size: 8px;
+      font-weight: 800;
+      background: var(--green-soft);
+      color: var(--green-ok);
+      border: 1px solid rgba(52, 211, 153, 0.2);
+      border-radius: 3px;
+      padding: 1px 4px;
+    }
+
+    /* ── STREAM ITEMS (MIDDLE PANEL) ── */
+    .stream-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .stream-card {
+      background: var(--bg-raise);
+      border: 1px solid var(--line-bright);
+      border-radius: var(--r-md);
+      padding: 14px 16px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all var(--t-base) var(--ease);
+      position: relative;
+    }
+
+    .stream-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.01) 0%, transparent 100%);
+    }
+
+    .stream-card:hover {
+      border-color: rgba(148, 163, 184, 0.15);
+      transform: translateY(-1px);
+    }
+
+    .stream-card.active {
+      background: rgba(56, 189, 248, 0.03);
+      border-color: var(--teal-soft);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .stream-card.active::before {
+      content: "";
+      position: absolute;
+      left: -1px;
+      top: 14px;
+      bottom: 14px;
+      width: 2px;
+      background: var(--teal);
+      border-radius: 0 var(--r-sm) var(--r-sm) 0;
+    }
+
+    .card-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .meta-method-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .meta-method {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--metal-hi);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255,255,255,0.04);
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+
+    .meta-id {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--metal-4);
+    }
+
+    .meta-path {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--metal-1);
+      margin-top: 1px;
+    }
+
+    .card-status {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+
+    .status-badge {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 3px;
+      letter-spacing: 0.02em;
+    }
+
+    .status-200 { background: var(--green-soft); color: var(--green-ok); border: 1px solid rgba(52, 211, 153, 0.15); }
+    .status-500 { background: var(--ember-soft); color: var(--ember); border: 1px solid rgba(239, 68, 68, 0.15); }
+    .status-202 { background: var(--blue-soft); color: var(--blue-acc); border: 1px solid rgba(59, 130, 246, 0.15); }
+    .status-time { font-size: 10px; color: var(--metal-4); }
+
+    /* ── CODE VIEWER CARD (RIGHT PANEL) ── */
+    .code-container {
+      background: rgba(4, 6, 10, 0.5);
+      border: 1px solid var(--line-dark);
+      border-radius: var(--r-md);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .code-header {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--line-dark);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.01);
+    }
+
+    .code-title { font-family: var(--font-mono); font-size: 10px; font-weight: bold; color: var(--metal-2); }
+    .code-controls { display: flex; gap: 6px; }
+
+    .code-body {
+      padding: 16px;
+      overflow-x: auto;
+      max-height: 380px;
+      background: #060911;
+    }
+
+    .code-body pre {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      line-height: 1.6;
+      color: var(--metal-1);
+    }
+
+    .syn-key { color: var(--teal); }
+    .syn-str { color: #f59e0b; } 
+    .syn-num { color: #a78bfa; } 
+    .syn-bool { color: #60a5fa; } 
+
+    /* ── AI ANALYSIS CARD ── */
+    .ai-analysis-card {
+      background: linear-gradient(135deg, rgba(12, 19, 34, 0.6) 0%, rgba(30, 41, 59, 0.25) 100%);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      border-radius: var(--r-md);
+      padding: 18px;
+      position: relative;
+    }
+
+    .ai-analysis-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      background: linear-gradient(180deg, rgba(56, 189, 248, 0.02) 0%, transparent 100%);
+    }
+
+    .ai-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .ai-title-wrap { display: flex; align-items: center; gap: 8px; }
+    .ai-spark-icon { font-size: 14px; color: var(--teal-bright); text-shadow: 0 0 10px var(--teal-bright); }
+    .ai-title { font-weight: 700; font-size: 10px; font-family: var(--font-mono); color: var(--metal-2); text-transform: uppercase; letter-spacing: 0.05em; }
+    .ai-badge { font-size: 8px; font-weight: bold; color: var(--teal); background: var(--teal-soft); padding: 1px 5px; border-radius: 3px; border: 1px solid rgba(56, 189, 248, 0.2); }
+    .ai-badge.error { color: var(--ember); background: var(--ember-soft); border-color: rgba(239, 68, 68, 0.2); }
+    .ai-card-body { display: flex; flex-direction: column; gap: 12px; }
+    .ai-status-summary { font-size: 15px; font-weight: 700; color: var(--metal-hi); }
+    .ai-explanation { font-size: 12px; line-height: 1.5; color: var(--metal-2); }
+    .ai-metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; border-top: 1px solid var(--line-dark); padding-top: 12px; margin-top: 2px; }
+    .metric-item { display: flex; flex-direction: column; gap: 2px; }
+    .metric-label { font-size: 8px; font-family: var(--font-mono); text-transform: uppercase; color: var(--metal-4); }
+    .metric-value { font-size: 11px; font-weight: 600; color: var(--metal-1); display: flex; align-items: center; gap: 5px; }
+    
+    .status-dot { width: 5px; height: 5px; border-radius: 50%; }
+    .status-dot.green { background: var(--green-ok); box-shadow: 0 0 6px var(--green-ok); }
+    .status-dot.red { background: var(--ember); box-shadow: 0 0 6px var(--ember); }
+
+    .ai-checks-list { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--line-dark); padding-top: 12px; }
+    .check-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: rgba(0, 0, 0, 0.15); border: 1px solid var(--line-dark); border-radius: var(--r-sm); font-size: 11px; color: var(--metal-2); cursor: pointer; transition: all var(--t-base); }
+    .check-item:hover { border-color: rgba(255, 255, 255, 0.05); }
+    .check-icon { color: var(--green-ok); font-weight: bold; }
+    .check-icon.fail { color: var(--ember); }
+
+    @media (max-width: 900px) {
+      .app-container { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .workspace { grid-template-columns: 1fr; height: auto; overflow: visible; }
+      .panel { height: auto; }
+      .panel-header { position: sticky; top: 0; z-index: 50; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <aside class="sidebar">
+      <div class="sidebar-top">
+        <div class="brand-section">
+          <div class="brand-icon-box">
+            <span class="brand-icon-symbol">✦</span>
+          </div>
+          <div class="brand-title-wrap">
+            <h1 class="brand-title">Aether Studio</h1>
+            <p class="brand-sub">Pro Workspace</p>
+          </div>
+        </div>
+        
+        <nav class="nav-list">
+          <a class="nav-item active"><span class="nav-icon">✹</span> Signals</a>
+          <a class="nav-item"><span class="nav-icon">⚙</span> Editor</a>
+          <a class="nav-item"><span class="nav-icon">📂</span> Assets</a>
+          <a class="nav-item"><span class="nav-icon">🌐</span> Models</a>
+          <a class="nav-item"><span class="nav-icon">🛠</span> Settings</a>
+        </nav>
+      </div>
+      
+      <div class="sidebar-footer">
+        <button class="btn-new-signal" onclick="triggerToast()">+ New Signal</button>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      
+      <section class="panel">
+        <header class="panel-header">
+          <div class="panel-title">
+            <span class="pulse-dot"></span>
+            Signal Stream
+            <span class="badge-live">LIVE</span>
+          </div>
+          <span style="font-family: var(--font-mono); font-size: 11px; color: var(--teal); font-weight: bold;">LIVEFEED</span>
+        </header>
+        
+        <div class="panel-body">
+          <div class="stream-container" id="stream-deck"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <header class="panel-header">
+          <div class="panel-title">Payload Inspector</div>
+          <span id="active-event-header" style="font-family: var(--font-mono); font-size: 11px; color: var(--metal-4); background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: var(--r-sm); border: 1px solid var(--line-dark);">No Active Event</span>
+        </header>
+        
+        <div class="panel-body">
+          
+          <div class="code-container">
+            <div class="code-header">
+              <span class="code-title">JSON Syntax Highlight</span>
+              <div class="code-controls">
+                <button class="btn-icon" onclick="copyActivePayload()">Copy</button>
+                <button class="btn-icon" onclick="replayActivePayload()">Replay</button>
+              </div>
+            </div>
+            <div class="code-body">
+              <pre id="code-block-renderer"></pre>
+            </div>
+          </div>
+
+          <div class="ai-analysis-card">
+            <div class="ai-header-row">
+              <div class="ai-title-wrap">
+                <span class="ai-spark-icon">✦</span>
+                <span class="ai-title">AI Contextual Analysis</span>
+              </div>
+              <span class="ai-badge" id="ai-confidence-badge">High Confidence</span>
+            </div>
+            
+            <div class="ai-card-body">
+              <h3 class="ai-status-summary" id="ai-status-summary">Analysing...</h3>
+              <p class="ai-explanation" id="ai-explanation">Please select a signal from the live feed to evaluate context.</p>
+              
+              <div class="ai-metrics-grid">
+                <div class="metric-item">
+                  <span class="metric-label">Identifier Node</span>
+                  <span class="metric-value" id="ai-metric-id">-</span>
+                </div>
+                <div class="metric-item">
+                  <span class="metric-label">Risk Evaluation</span>
+                  <span class="metric-value" id="ai-metric-risk"><span class="status-dot"></span>-</span>
+                </div>
+              </div>
+
+              <div class="ai-checks-list" id="ai-checks-list"></div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+
+  </div>
+
+  <script>
+    const DATALEDGER = [
+      {
+        id: "evt_3N4yXu2eZvKYlo2C1", method: "POST", path: "/api/v1/payment_", status: 200, time: "Just now",
+        payload: {
+          id: "evt_3N4yXu2eZvKYlo2C1W8", object: "event", api_version: "2022-11-15", created: 1689255282,
+          data: { object: { id: "pi_3N4yXu2eZvKYlo2C1W8", amount: 45.00, currency: "usd", customer: "cus_02jA...", description: "Pro Workspace Subscription" } },
+          livemode: true
+        },
+        ai: {
+          summary: "Payment Succeeded", confidence: "High Confidence", is_error: false,
+          explanation: "Payload analysis indicates a successful standard payment_intent.succeeded event from Stripe. The amount is $45.00 USD for a 'Pro Workspace Subscription'.",
+          id: "cus_02jA...", risk: "Normal", risk_state: "green",
+          checks: [{ label: "Schema Validation Passed", passed: true }, { label: "Routed to Billing Service", passed: true }]
+        }
+      },
+      {
+        id: "evt_user_992x1a", method: "POST", path: "/api/v1/user/up_", status: 200, time: "2m ago",
+        payload: {
+          id: "evt_user_992x1a99Zq", object: "event", created: 1689255210,
+          data: { user_id: "usr_99a8b1", changes: { role: "admin", mfa_enabled: true } }, client: "cloudflare-edge"
+        },
+        ai: {
+          summary: "User Profile Updated", confidence: "Normal Confidence", is_error: false,
+          explanation: "Client account role elevated to 'admin'. Multiple Factor Authentication (MFA) was configured successfully during the session update sequence.",
+          id: "usr_99a8b1", risk: "Low Risk", risk_state: "green",
+          checks: [{ label: "MFA Setup Integrity Vetted", passed: true }, { label: "Session Expiry Appended", passed: true }]
+        }
+      },
+      {
+        id: "evt_sf_error_11", method: "POST", path: "/api/v1/sync/crm", status: 500, time: "15m ago",
+        payload: {
+          id: "evt_sf_error_11xx99", object: "error_log", code: "CRM_OUTAGE", severity: "critical",
+          detail: { service: "Salesforce CRM", latency_ms: 15400, error: "Gateway Timeout Connection Refused" }
+        },
+        ai: {
+          summary: "CRM Connection Outage", confidence: "Critical Alert", is_error: true,
+          explanation: "Outbound pipeline synchronized to CRM nodes timed out after 15.4 seconds. Third-party cloud integration services are currently throwing gateway exceptions.",
+          id: "Salesforce", risk: "Critical", risk_state: "red",
+          checks: [{ label: "Salesforce Status Poller Check", passed: false }, { label: "Auto-Retry Fallback Triggered", passed: true }]
+        }
+      }
+    ];
+
+    let activeEventId = DATALEDGER[0].id;
+
+    function syntaxHighlightJSON(jsonObj) {
+      let str = JSON.stringify(jsonObj, null, 2);
+      str = str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return str.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+        let cls = 'syn-num';
+        if (/^"/.test(match)) {
+          cls = (/:$/.test(match)) ? 'syn-key' : 'syn-str';
+        } else if (/true|false|null/.test(match)) {
+          cls = 'syn-bool';
+        }
+        return '<span class="' + cls + '">' + match + '</span>';
+      });
+    }
+
+    function renderAetherUI() {
+      const streamDeck = document.getElementById('stream-deck');
+      streamDeck.innerHTML = DATALEDGER.map(item => {
+        const isActive = item.id === activeEventId ? 'active' : '';
+        return `
+          <div class="stream-card ${isActive}" onclick="setActiveEvent('${item.id}')">
+            <div class="card-meta">
+              <div class="meta-method-row">
+                <span class="meta-method">${item.method}</span>
+                <span class="meta-id">${item.id}</span>
+              </div>
+              <p class="meta-path">${item.path}</p>
+            </div>
+            <div class="card-status">
+              <span class="status-badge status-${item.status}">${item.status} ${item.status === 200 ? 'OK' : item.status === 500 ? 'ERR' : 'ACC'}</span>
+              <span class="status-time">${item.time}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const activeObj = DATALEDGER.find(i => i.id === activeEventId) || DATALEDGER[0];
+      document.getElementById('active-event-header').textContent = activeObj.payload.id;
+      document.getElementById('code-block-renderer').innerHTML = syntaxHighlightJSON(activeObj.payload);
+
+      const ai = activeObj.ai;
+      const confidenceBadge = document.getElementById('ai-confidence-badge');
+      confidenceBadge.textContent = ai.confidence;
+      confidenceBadge.className = ai.is_error ? 'ai-badge error' : 'ai-badge';
+
+      document.getElementById('ai-status-summary').textContent = ai.summary;
+      document.getElementById('ai-explanation').textContent = ai.explanation;
+      document.getElementById('ai-metric-id').textContent = ai.id;
+      document.getElementById('ai-metric-risk').innerHTML = `<span class="status-dot ${ai.risk_state}"></span>${ai.risk}`;
+
+      document.getElementById('ai-checks-list').innerHTML = ai.checks.map(c => `
+        <div class="check-item">
+          <span>${c.label}</span>
+          <span class="check-icon ${c.passed ? '' : 'fail'}">${c.passed ? '✓' : '✗'}</span>
+        </div>
+      `).join('');
+    }
+
+    function setActiveEvent(id) {
+      activeEventId = id;
+      renderAetherUI();
+    }
+
+    function triggerToast() {
+      const el = document.createElement('div');
+      el.className = 'toast';
+      el.style.cssText = 'position:fixed; bottom:20px; right:20px; z-index:9999; padding:12px 18px; border-radius:8px; font-family:var(--font-mono); font-size:11px; color:#fff; background:var(--metal-dark-brushed); border:1px solid var(--line-dark); box-shadow:0 10px 30px rgba(0,0,0,0.5); transition:all 0.3s; opacity:0; transform:translateY(10px);';
+      el.textContent = 'SYSTEM SIGNAL INITIATED ON SERVERLESS EDGE';
+      document.body.appendChild(el);
+      setTimeout(() => { el.style.opacity = '1'; el.style.transform = 'translateY(0)'; }, 50);
+      setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateY(10px)'; setTimeout(() => el.remove(), 300); }, 3000);
+    }
+
+    function copyActivePayload() {
+      const activeObj = DATALEDGER.find(i => i.id === activeEventId);
+      navigator.clipboard.writeText(JSON.stringify(activeObj.payload, null, 2));
+      const copyBtn = document.querySelector('.code-controls .btn-icon:first-child');
+      copyBtn.textContent = 'Copied!';
+      setTimeout(() => { copyBtn.textContent = 'Copy'; }, 1500);
+    }
+
+    window.onload = function() {
+      renderAetherUI();
+    };
+  </script>
+</body>
+</html>
